@@ -19,7 +19,12 @@ Our billing and revenue management system allows for claims to be sent out eithe
 
 ## User Personas
 James, age 27, is the payer for his recent treatment from Local Medical Center and wants to pay part of his outstanding balance for the treatment. He prefers to pay through the online portal where he can pay by credit card through his account. He can access the online payment portal and see his remaining balance and due date after making his latest payment.  
-Steven, age 60, is a physician at Local Medical Center who has been practicing medicine for 30 years. He is not very tech savvy and prefers to do paperwork physically or on very easy to use systems. The local medical center has had a buildup of paperwork recently, especially with billing related invoices, due to staffing shortages.  
+
+Steven, age 60, is a physician at Local Medical Center who has been practicing medicine for 30 years. He is not very tech savvy and prefers to do paperwork physically or on very easy to use systems. Local Medical Center has had a buildup of paperwork recently, especially with billing related invoices, due to staffing shortages. He needs to be able to input diagnoses for patients into the portal along with the invoice for payment.  
+
+Holly, age 26 is a Billing Specialist for Local Billing Company. She previously worked in banking and other financial companies, and just started at Local Billing Company 1 year ago. At Local Billing Company she spends most of her day preparing invoices and checking on invoices which are overdue. She needs to be able to both send these out and check on their status virtually.  
+
+Charles, age 30, is a Medical Billing Specialist working for Local Insurance Company. He enjoys working and talking with people and has been in insurance for his entire professional career. He needs to be able to see insurance claims from patients and apply the appropriate payment covered baced on ICD-10 lookup.  
 
 ## Product Backlog
 https://www.pivotaltracker.com/n/projects/2605199
