@@ -15,7 +15,7 @@ Our billing and revenue management system allows for claims to be sent out eithe
 * Payer (patient)
 * Practice
 * 3rd party billing company
-* Insurance company
+* **Insurance company**
 
 ## User Personas
 James, age 27, is the payer for his recent treatment from Local Medical Center and wants to pay part of his outstanding balance for the treatment. He prefers to pay through the online portal where he can pay by credit card through his account. He can access the online payment portal and see his remaining balance and due date after making his latest payment.  
@@ -24,8 +24,9 @@ Steven, age 60, is a physician at Local Medical Center who has been practicing m
 
 Holly, age 26 is a Billing Specialist for Local Billing Company. She previously worked in banking and other financial companies, and just started at Local Billing Company 1 year ago. At Local Billing Company she spends most of her day preparing invoices and checking on invoices which are overdue. She needs to be able to both send these out and check on their status virtually.  
 
-Charles, age 30, is a Medical Billing Specialist working for Local Insurance Company. He enjoys working and talking with people and has been in insurance for his entire professional career. He needs to be able to see insurance claims from patients and apply the appropriate payment covered baced on ICD-10 lookup.  
+Charles, age 30, is a Medical Billing Specialist working for Local Insurance Company. He enjoys working and talking with people and has been in insurance for his entire professional career. He needs to be able to see insurance claims from patients and apply the appropriate payment covered baced on ICD-10 lookup. He also wants a convenient way to contact the medical provider in the case of incorrect billing rates and ensure diagnoses are being paid for appropriately.  
 
 ## Product Backlog
 https://www.pivotaltracker.com/n/projects/2605199
-Note: I need to figure out how to add people or make this public
+The backlog is organized with the tasks most important for making a MVP at the top, going down.
+Definition of ready: The title should be the user story involved, user story should be in the format of As a... and then give the requirements
