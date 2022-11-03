@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/Samuel-Muller/cs673-project#readme",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "swagger-jsdoc": "^6.2.5",
+    "swagger-ui-express": "^4.5.0"
   }
 }
