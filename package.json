@@ -4,6 +4,7 @@
   "description": "Billing and Revenue Management API",
   "main": "server.js",
   "scripts": {
+    "server": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
