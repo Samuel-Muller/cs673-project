@@ -26,6 +26,8 @@ app.use((req, res, next) => {
     next()
 })
 
+app.use(express.json())
+
 // Import the billing router
 app.use('/billing', billing)
 

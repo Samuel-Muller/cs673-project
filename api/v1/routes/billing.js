@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
 
+let reports = []
+let payments = []
+
 /**
 * @openapi
 * /payments:
@@ -39,10 +42,52 @@ const router = express.Router()
 */
 router.route('/payments')
     .get((req, res) => {
-        res.send('TODO: get all payments')
+        try {
+            if (req.body.userID && req.body.clientID) {
+                if (req.body.clientID !== "123abc") {
+                    return res.status(401).send('Client not authorized')
+                }
+                if (req.body.userID !== "123") {
+                    return res.status(403).send('User is not authorized to create payment')
+                }
+                if (payments.length > 0) {
+                    return res.status(200).send(payments)
+                } else {
+                    return res.status(404).send('No payments found')
+                }
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
     })
     .post((req, res) => {
-        res.send('TODO: create payment')
+        try {
+            if (req.body.userID && req.body.clientID && req.body.totalAmount && req.body.minimumDue && req.body.invoiceDate && req.body.dueDate) {
+                if (req.body.clientID !== "123abc") {
+                    return res.status(401).send('Client not authorized')
+                }
+                if (req.body.userID !== "123") {
+                    return res.status(403).send('User is not authorized to create payment')
+                }
+                const record = {
+                    paymentID: 'py' + Math.floor((Math.random() * 99999) + 10000),
+                    confirmationCode: 'CTR' + Math.floor((Math.random() * 99999) + 10000),
+                }
+
+                payments.push({
+                    userID: req.body.userID,
+                    clientID: req.body.clientID,
+                    paymentID: record.paymentID,
+                    totalAmount: req.body.totalAmount,
+                    minimumDue: req.body.minimumDue,
+                    invoiceDate: req.body.invoiceDate,
+                    dueDate: req.body.dueDate
+                })
+                return res.status(200).send(record)
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
     })
 
 /**
@@ -104,13 +149,95 @@ router.route('/payments')
 */
 router.route('/payments/:payment_id')
     .get((req, res) => {
-        res.send('TODO: get payment info')
+        try {
+            if (req.body.userID && req.body.clientID) {
+                if (req.body.clientID !== "123abc") {
+                    return res.status(401).send('Client not authorized')
+                }
+                if (req.body.userID !== "123") {
+                    return res.status(403).send('User is not authorized to create payment')
+                }
+                if (req.params.payment_id && req.params.payment_id.startsWith('py')) {
+                    const payment = payments.find(payment => payment.paymentID === req.params.payment_id)
+                    if (!payment) {
+                        return res.status(404).send('No payments found')
+                    }
+                    return res.status(200).send(payment)
+                } else {
+                    return res.status(400).send('Invalid payment ID')
+                }
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
     })
     .put((req, res) => {
-        res.send('TODO: update payment')
+        try {
+            if (req.body.userID && req.body.clientID && req.body.totalAmount && req.body.minimumDue && req.body.invoiceDate && req.body.dueDate) {
+                if (req.body.clientID !== "123abc") {
+                    return res.status(401).send('Client not authorized')
+                }
+                if (req.body.userID !== "123") {
+                    return res.status(403).send('User is not authorized to create payment')
+                }
+
+                if (req.params.payment_id && req.params.payment_id.startsWith('py')) {
+                    const payment = payments.find(payment => payment.paymentID === req.params.payment_id)
+                    if (!payment) {
+                        return res.status(404).send('No payments found')
+                    }
+                    const newPayments = payments.filter(payment => payment.paymentID !== req.params.payment_id)
+                    payments = newPayments
+
+                    const record = {
+                        paymentID: payment.paymentID,
+                        confirmationCode: 'CTR' + Math.floor((Math.random() * 99999) + 10000),
+                    }
+
+                    payments.push({
+                        userID: req.body.userID,
+                        clientID: req.body.clientID,
+                        paymentID: record.paymentID,
+                        totalAmount: req.body.totalAmount,
+                        minimumDue: req.body.minimumDue,
+                        invoiceDate: req.body.invoiceDate,
+                        dueDate: req.body.dueDate
+                    })
+
+                    return res.status(200).send(record)
+                } else {
+                    return res.status(400).send('Invalid payment ID')
+                }
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
+
     })
-    .deklete((req, res) => {
-        res.send('TODO: delete payment')
+    .delete((req, res) => {
+        try {
+            if (req.body.userID && req.body.clientID) {
+                if (req.body.clientID !== "123abc") {
+                    return res.status(401).send('Client not authorized')
+                }
+                if (req.body.userID !== "123") {
+                    return res.status(403).send('User is not authorized to create payment')
+                }
+                if (req.params.payment_id && req.params.payment_id.startsWith('py')) {
+                    const payment = payments.find(payment => payment.paymentID === req.params.payment_id)
+                    if (!payment) {
+                        return res.status(404).send('No payment found')
+                    }
+                    const newPayments = payments.filter(payment => payment.paymentID !== req.params.payment_id)
+                    payments = newPayments
+                    return res.status(200).send('Payment deleted')
+                } else {
+                    return res.status(400).send('Invalid payment ID')
+                }
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
     })
 
 /**
@@ -151,10 +278,53 @@ router.route('/payments/:payment_id')
 */
 router.route('/reports')
     .get((req, res) => {
-        res.send('TODO: get all reports')
+        try {
+            if (req.body.userID && req.body.clientID) {
+                if (req.body.clientID !== "123abc") {
+                    return res.status(401).send('Client not authorized')
+                }
+                if (req.body.userID !== "123") {
+                    return res.status(403).send('User is not authorized to create payment')
+                }
+                if (reports.length > 0) {
+                    return res.status(200).send(reports)
+                } else {
+                    return res.status(404).send('No reports found')
+                }
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
     })
     .post((req, res) => {
-        res.send('TODO: create report')
+        try {
+            if (req.body.userID && req.body.clientID && req.body.totalBalance && req.body.startDate && req.body.endDate) {
+                if (req.body.clientID !== "123abc") {
+                    return res.status(401).send('Client not authorized')
+                }
+                if (req.body.userID !== "123") {
+                    return res.status(403).send('User is not authorized to create report')
+                }
+                const record = {
+                    reportID: 'py' + Math.floor((Math.random() * 99999) + 10000),
+                    confirmationCode: 'CTR' + Math.floor((Math.random() * 99999) + 10000),
+                }
+
+                reports.push({
+                    userID: req.body.userID,
+                    clientID: req.body.clientID,
+                    reportID: record.reportID,
+                    startDate: req.body.startDate,
+                    endDate: req.body.endDate,
+                    totalBalance: req.body.totalBalance
+                })
+                return res.status(200).send(record)
+            } else {
+                return res.status(400).send('Invalid report details')
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
     })
 
 /**
@@ -216,13 +386,95 @@ router.route('/reports')
 */
 router.route('/reports/:report_id')
     .get((req, res) => {
-        res.send('TODO: get report info')
+        try {
+            if (req.body.userID && req.body.clientID) {
+                if (req.body.clientID !== "123abc") {
+                    return res.status(401).send('Client not authorized')
+                }
+                if (req.body.userID !== "123") {
+                    return res.status(403).send('User is not authorized to create report')
+                }
+                if (req.params.report_id && req.params.report_id.startsWith('py')) {
+                    const report = reports.find(report => report.reportID === req.params.report_id)
+                    if (!report) {
+                        return res.status(404).send('No reports found')
+                    }
+                    return res.status(200).send(report)
+                } else {
+                    return res.status(400).send('Invalid report ID')
+                }
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
     })
     .put((req, res) => {
-        res.send('TODO: update report')
+        try {
+            if (req.body.userID && req.body.clientID && req.body.totalBalance && req.body.startDate && req.body.endDate) {
+                if (req.body.clientID !== "123abc") {
+                    return res.status(401).send('Client not authorized')
+                }
+                if (req.body.userID !== "123") {
+                    return res.status(403).send('User is not authorized to create report')
+                }
+
+                if (req.params.report_id && req.params.report_id.startsWith('py')) {
+                    const report = reports.find(report => report.reportID === req.params.report_id)
+                    if (!report) {
+                        return res.status(404).send('No reports found')
+                    }
+                    const newReports = reports.filter(report => report.reportID !== req.params.report_id)
+                    reports = newReports
+
+                    const record = {
+                        reportID: report.reportID,
+                        confirmationCode: 'CTR' + Math.floor((Math.random() * 99999) + 10000),
+                    }
+
+                    reports.push({
+                        userID: req.body.userID,
+                        clientID: req.body.clientID,
+                        reportID: record.reportID,
+                        startDate: req.body.startDate,
+                        endDate: req.body.endDate,
+                        totalBalance: req.body.totalBalance
+                    })
+
+
+                    return res.status(200).send(record)
+                } else {
+                    return res.status(400).send('Invalid report ID')
+                }
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
+
     })
     .delete((req, res) => {
-        res.send('TODO: delete report')
+        try {
+            if (req.body.userID && req.body.clientID) {
+                if (req.body.clientID !== "123abc") {
+                    return res.status(401).send('Client not authorized')
+                }
+                if (req.body.userID !== "123") {
+                    return res.status(403).send('User is not authorized to create report')
+                }
+                if (req.params.report_id && req.params.report_id.startsWith('py')) {
+                    const report = reports.find(report => report.reportID === req.params.report_id)
+                    if (!report) {
+                        return res.status(404).send('No report found')
+                    }
+                    const newReports = reports.filter(report => report.reportID !== req.params.report_id)
+                    reports = newReports
+                    return res.status(200).send('Report deleted')
+                } else {
+                    return res.status(400).send('Invalid report ID')
+                }
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
     })
 
 module.exports = router
