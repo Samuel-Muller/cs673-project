@@ -1,3 +1,4 @@
 node_modules
 package-lock.json
 build_push_docker.sh
+.env

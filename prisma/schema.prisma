@@ -1,0 +1,44 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity"]
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model payment {
+  payment_id   Int      @id @default(autoincrement())
+  user_id      Int
+  invoice_id   Int
+  insurance_id Int
+  total_amount Float    @db.Float
+  payment_date DateTime @db.Date
+  card_number  Int
+  card_exp     Int
+}
+
+model insurance {
+  insurance_id   Int      @id @default(autoincrement())
+  insurance_date DateTime @db.DateTime(0)
+  client_name    String   @db.VarChar(45)
+  invoice_title  String   @db.VarChar(45)
+  invoice_amount Float    @db.Float
+  amount_due     Float    @db.Float
+}
+
+model invoice {
+  invoice_id        Int       @id @default(autoincrement())
+  user_id           Int
+  insurance_id      Int
+  invoice_title     String    @db.VarChar(45)
+  diagnosis         String    @db.VarChar(10000)
+  total_amount      Float     @db.Float
+  minimum_due       Float     @db.Float
+  due_date          DateTime  @db.DateTime(0)
+  last_payment_date DateTime? @db.DateTime(0)
+  invoice_date      DateTime  @db.DateTime(0)
+  approved          Int?
+}
