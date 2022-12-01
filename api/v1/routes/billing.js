@@ -535,7 +535,7 @@ router.route('/invoices')
 /**
 * @openapi
 * /invoices/search/icd10:
-*   post:
+*   get:
 *     tags:
 *       - Invoices
 *     produces:
@@ -554,7 +554,7 @@ router.route('/invoices')
 *         schema:
 *           description: ICD-10 search term
 *           required: true
-*           type: array
+*           type: string
 *           example: {icd10: "J06.9"}
 *     responses:
 *       200:
@@ -600,7 +600,7 @@ router.route('/invoices/search/icd10')
 /**
 * @openapi
 * /invoices/search/diagnosis:
-*   post:
+*   get:
 *     tags:
 *       - Invoices
 *     produces:
@@ -619,7 +619,7 @@ router.route('/invoices/search/icd10')
 *         schema:
 *           description: Diagnosis search term
 *           required: true
-*           type: array
+*           type: string
 *           example: {diagnosis: "cough"}
 *     responses:
 *       200:
