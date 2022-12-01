@@ -41,4 +41,13 @@ model invoice {
   last_payment_date DateTime? @db.DateTime(0)
   invoice_date      DateTime  @db.DateTime(0)
   approved          Int?
+  icd10             String    @db.VarChar(1000)
+}
+
+model reports {
+  report_id    Int      @id @default(autoincrement())
+  startDate    DateTime @db.Date
+  endDate      DateTime @db.Date
+  totalBalance Float    @db.Float
+  payment_id   String?  @db.VarChar(1000)
 }

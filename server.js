@@ -17,7 +17,7 @@ const options = {
 };
 const swaggerSpec = swaggerJSDoc(options);
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000;
 
 // Log all requests and responses to the console
 app.use((req, res, next) => {

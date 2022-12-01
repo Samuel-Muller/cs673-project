@@ -286,6 +286,9 @@ router.route('/payments/:payment_id')
                 if (req.body.userID !== 123) {
                     return res.status(403).send('User is not authorized to create payment')
                 }
+                if (!Number(req.params.payment_id)) {
+                    return res.status(400).send('Invalid payment ID')
+                }
                 prisma.payment.findUnique({
                     where: {
                         payment_id: Number(req.params.payment_id)
@@ -312,40 +315,39 @@ router.route('/payments/:payment_id')
                 if (req.body.userID !== 123) {
                     return res.status(403).send('User is not authorized to create payment')
                 }
-                let date = new Date()
-                if (req.params.payment_id) {
-                    prisma.payment.update({
-                        where: {
-                            payment_id: Number(req.params.payment_id)
-                        },
-                        data: {
-                            user_id: req.body.userID,
-                            total_amount: req.body.totalAmount,
-                            insurance_id: 0,
-                            card_number: req.body.cardNum,
-                            card_exp: req.body.cardExp,
-                        }
-                    }).then((payment) => {
-                        // update invoice after updating payment
-                        prisma.invoice.update({
-                            where: {
-                                invoice_id: req.body.invoiceID
-                            },
-                            data: {
-                                last_payment_date: date,
-                                last_payment_amount: req.body.totalAmount,
-                            }
-                        }).then((invoice) => {
-                            return res.status(200).send(payment)
-                        }).catch((e) => {
-                            return res.status(400).send('Could not update invoice after payment')
-                        })
-                    }).catch((e) => {
-                        return res.status(400).send('Invalid payment details')
-                    })
-                } else {
+                if (!Number(req.params.payment_id)) {
                     return res.status(400).send('Invalid payment ID')
                 }
+                let date = new Date()
+                prisma.payment.update({
+                    where: {
+                        payment_id: Number(req.params.payment_id)
+                    },
+                    data: {
+                        user_id: req.body.userID,
+                        total_amount: req.body.totalAmount,
+                        insurance_id: 0,
+                        card_number: req.body.cardNum,
+                        card_exp: req.body.cardExp,
+                    }
+                }).then((payment) => {
+                    // update invoice after updating payment
+                    prisma.invoice.update({
+                        where: {
+                            invoice_id: req.body.invoiceID
+                        },
+                        data: {
+                            last_payment_date: date,
+                            last_payment_amount: req.body.totalAmount,
+                        }
+                    }).then((invoice) => {
+                        return res.status(200).send(payment)
+                    }).catch((e) => {
+                        return res.status(400).send('Could not update invoice after payment')
+                    })
+                }).catch((e) => {
+                    return res.status(400).send('Invalid payment details')
+                })
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -358,20 +360,19 @@ router.route('/payments/:payment_id')
                 if (req.body.userID !== 123) {
                     return res.status(403).send('User is not authorized to create payment')
                 }
-                if (req.params.payment_id) {
-                    prisma.payment.delete({
-                        where: {
-                            payment_id: Number(req.params.payment_id)
-                        }
-                    }).then((payment) => {
-                        //TODO: update invoice after deleting payment
-                        return res.status(200).send('Payment deleted')
-                    }).catch((e) => {
-                        return res.status(400).send('Invalid payment ID')
-                    })
-                } else {
+                if (!Number(req.params.payment_id)) {
                     return res.status(400).send('Invalid payment ID')
                 }
+                prisma.payment.delete({
+                    where: {
+                        payment_id: Number(req.params.payment_id)
+                    }
+                }).then((payment) => {
+                    //TODO: update invoice after deleting payment
+                    return res.status(200).send('Payment deleted')
+                }).catch((e) => {
+                    return res.status(400).send('Invalid payment ID')
+                })
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -453,6 +454,13 @@ router.route('/payments/:payment_id')
 *           required: true
 *           type: string
 *           example: "12/30/2022"
+*       - in: body
+*         name: icd10
+*         schema:
+*           description: List of ICD-10 codes
+*           required: true
+*           type: array
+*           example: ["J06.9", "J20.9"]
 *     responses:
 *       200:
 *         description: Invoice created
@@ -480,6 +488,8 @@ router.route('/invoices')
                 }).catch((e) => {
                     return res.status(400).send('Invalid invoice details')
                 })
+            } else {
+                return res.status(401).send('Invalid')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -487,7 +497,7 @@ router.route('/invoices')
     })
     .post(async (req, res) => {
         try {
-            if (true) {
+            if (req.body.userID && req.body.invoiceTitle && req.body.diagnosis && req.body.totalAmount && req.body.minimumDue && req.body.dueDate && req.body.icd10) {
                 if (req.body.userID !== 123) {
                     return res.status(403).send('User is not authorized to create invoice')
                 }
@@ -505,7 +515,8 @@ router.route('/invoices')
                         due_date: dueDate,
                         minimum_due: req.body.minimumDue,
                         last_payment_date: null,
-                        approved: 0
+                        approved: 0,
+                        icd10: JSON.stringify(req.body.icd10)
                     }
                 }).then((invoice) => {
                     return res.status(200).send(invoice)
@@ -513,6 +524,138 @@ router.route('/invoices')
                     console.log(e)
                     return res.status(400).send('Invalid invoice details')
                 })
+            } else {
+                return res.status(400).send('Invalid invoice details')
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
+    })
+
+/**
+* @openapi
+* /invoices/search/icd10:
+*   post:
+*     tags:
+*       - Invoices
+*     produces:
+*       - application/json
+*     description: ICD-10 invoice search
+*     parameters:
+*       - in: body
+*         name: userID
+*         schema:
+*           description: User ID that is approving invoice
+*           required: true
+*           type: int
+*           example: {userID: 123}
+*       - in: body
+*         name: icd10
+*         schema:
+*           description: ICD-10 search term
+*           required: true
+*           type: array
+*           example: {icd10: "J06.9"}
+*     responses:
+*       200:
+*         description: Returns invoices details
+*       400:
+*         description: Invalid search details
+*       401:
+*         description: Client not authorized
+*       403:
+*         description: User is not authorized to access invoice details
+*       404:
+*         description: Invoice not found
+*       500:
+*         description: Internal server error
+*/
+router.route('/invoices/search/icd10')
+    .get(async (req, res) => {
+        try {
+            if (req.body.userID && req.body.icd10) {
+                if (req.body.userID !== 123) {
+                    return res.status(403).send('User is not authorized to approve invoice')
+                }
+
+                prisma.invoice.findMany({
+                    where: {
+                        icd10: {
+                            contains: req.body.icd10
+                        }
+                    },
+                }).then((invoices) => {
+                    return res.status(200).send(invoices)
+                }).catch((e) => {
+                    return res.status(404).send('Invoices not found')
+                })
+            } else {
+                return res.status(400).send('Invalid search details. Please provide a valid search term and user ID in body')
+            }
+        } catch (e) {
+            return res.status(500).send('Internal server error')
+        }
+    })
+
+/**
+* @openapi
+* /invoices/search/diagnosis:
+*   post:
+*     tags:
+*       - Invoices
+*     produces:
+*       - application/json
+*     description: Diagnosis invoice search
+*     parameters:
+*       - in: body
+*         name: userID
+*         schema:
+*           description: User ID that is approving invoice
+*           required: true
+*           type: int
+*           example: {userID: 123}
+*       - in: body
+*         name: diagnosis
+*         schema:
+*           description: Diagnosis search term
+*           required: true
+*           type: array
+*           example: {diagnosis: "cough"}
+*     responses:
+*       200:
+*         description: Returns invoices details
+*       400:
+*         description: Invalid search details
+*       401:
+*         description: Client not authorized
+*       403:
+*         description: User is not authorized to access invoice details
+*       404:
+*         description: Invoice not found
+*       500:
+*         description: Internal server error
+*/
+router.route('/invoices/search/diagnosis')
+    .get(async (req, res) => {
+        try {
+            if (req.body.userID && req.body.diagnosis) {
+                if (req.body.userID !== 123) {
+                    return res.status(403).send('User is not authorized to approve invoice')
+                }
+
+                prisma.invoice.findMany({
+                    where: {
+                        diagnosis: {
+                            contains: req.body.diagnosis
+                        }
+                    },
+                }).then((invoices) => {
+                    return res.status(200).send(invoices)
+                }).catch((e) => {
+                    return res.status(404).send('Invoices not found')
+                })
+            } else {
+                return res.status(400).send('Invalid search details. Please provide a diagnosis search term and user ID')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -603,6 +746,13 @@ router.route('/invoices')
 *           required: true
 *           type: string
 *           example: "12/30/2022"
+*       - in: body
+*         name: icd10
+*         schema:
+*           description: List of ICD-10 codes
+*           required: true
+*           type: array
+*           example: ["J06.9", "J20.9"]
 *       - in: path
 *         name: invoice_id
 *         schema:
@@ -663,9 +813,12 @@ router.route('/invoices/:invoice_id')
                 if (req.body.userID !== 123) {
                     return res.status(403).send('User is not authorized to access invoice')
                 }
+                if (!Number(req.params.invoice_id)) {
+                    return res.status(400).send('Invalid invoice ID')
+                }
                 prisma.invoice.findUnique({
                     where: {
-                        invoice_id: req.params.invoice_id
+                        invoice_id: Number(req.params.invoice_id)
                     }
                 }).then((invoice) => {
                     if (!invoice) {
@@ -686,30 +839,34 @@ router.route('/invoices/:invoice_id')
                 if (req.body.userID !== 123) {
                     return res.status(403).send('User is not authorized to create invoice')
                 }
-
-                if (req.params.invoice_id) {
-                    prisma.invoice.update({
-                        where: {
-                            invoice_id: req.params.invoice_id
-                        },
-                        data: {
-                            user_id: req.body.userID,
-                            insurance_id: 0, //TODO: implement insurance
-                            invoice_title: req.body.invoiceTitle,
-                            invoice_date: Date.now(),
-                            diagnosis: req.body.diagnosis,
-                            total_amount: req.body.totalAmount,
-                            due_date: req.body.dueDate,
-                            minimum_due: req.body.minimumDue
-                        }
-                    }).then((invoice) => {
-                        return res.status(200).send(invoice)
-                    }).catch((e) => {
-                        return res.status(400).send('Invalid invoice details')
-                    })
-                } else {
+                if (!Number(req.params.invoice_id)) {
                     return res.status(400).send('Invalid invoice ID')
                 }
+                let date = new Date()
+                var parsedDueDate = Date.parse(req.body.dueDate);
+                var dueDate = new Date(parsedDueDate);
+
+                prisma.invoice.update({
+                    where: {
+                        invoice_id: Number(req.params.invoice_id)
+                    },
+                    data: {
+                        user_id: req.body.userID,
+                        insurance_id: 0,
+                        invoice_title: req.body.invoiceTitle,
+                        invoice_date: date,
+                        diagnosis: req.body.diagnosis,
+                        total_amount: req.body.totalAmount,
+                        due_date: dueDate,
+                        minimum_due: req.body.minimumDue,
+                        icd10: JSON.stringify(req.body.icd10)
+                    }
+                }).then((invoice) => {
+                    return res.status(200).send(invoice)
+                }).catch((e) => {
+                    console.log(e)
+                    return res.status(400).send('Invalid invoice details')
+                })
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -721,24 +878,24 @@ router.route('/invoices/:invoice_id')
                 if (req.body.userID !== 123) {
                     return res.status(403).send('User is not authorized to create invoice')
                 }
-                if (req.params.invoice_id) {
-                    prisma.invoice.delete({
-                        where: {
-                            invoice_id: req.params.invoice_id
-                        }
-                    }).then((invoice) => {
-                        return res.status(200).send('Invoice deleted')
-                    }).catch((e) => {
-                        return res.status(404).send('Invoice not found')
-                    })
-                } else {
+                if (!Number(req.params.invoice_id)) {
                     return res.status(400).send('Invalid invoice ID')
                 }
+                prisma.invoice.delete({
+                    where: {
+                        invoice_id: Number(req.params.invoice_id)
+                    }
+                }).then((invoice) => {
+                    return res.status(200).send('Invoice deleted')
+                }).catch((e) => {
+                    return res.status(404).send('Invoice not found')
+                })
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
         }
     })
+
 /**
 * @openapi
 * /invoices/{invoice_id}/approve:
@@ -806,6 +963,7 @@ router.route('/invoices/:invoice_id/approve')
             return res.status(500).send('Internal server error')
         }
     })
+
 /**
 * @openapi
 * /reports:
@@ -815,6 +973,14 @@ router.route('/invoices/:invoice_id/approve')
 *     produces:
 *       - application/json
 *     description: Get all reports
+*     parameters:
+*       - in: body
+*         name: userID
+*         schema:
+*           description: User ID that is creating report
+*           required: true
+*           type: int
+*           example: {userID: 123}
 *     responses:
 *       200:
 *         description: Returns reports
@@ -830,6 +996,28 @@ router.route('/invoices/:invoice_id/approve')
 *     tags:
 *       - Reports
 *     description: Create new report
+*     parameters:
+*       - in: body
+*         name: userID
+*         schema:
+*           description: User ID that is creating report
+*           required: true
+*           type: int
+*           example: {userID: 123}
+*       - in: body
+*         name: startDate
+*         schema:
+*           description: Start date of payments to create report
+*           required: true
+*           type: string
+*           example: {startDate: "11/01/2022"}
+*       - in: body
+*         name: endDate
+*         schema:
+*           description: End date of payments to create report
+*           required: true
+*           type: string
+*           example: {endDate: "11/01/2022"}
 *     responses:
 *       200:
 *         description: Report created
@@ -843,46 +1031,76 @@ router.route('/invoices/:invoice_id/approve')
 *         description: Internal server error
 */
 router.route('/reports')
-    .get((req, res) => {
+    .get(async (req, res) => {
         try {
             if (req.body.userID) {
                 if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create payment')
+                    return res.status(403).send('User is not authorized to create report')
                 }
-                if (reports.length > 0) {
+                prisma.reports.findMany().then((reports) => {
+                    if (!reports) {
+                        return res.status(404).send('Reports not found')
+                    }
                     return res.status(200).send(reports)
-                } else {
-                    return res.status(404).send('No reports found')
-                }
+                }).catch((e) => {
+                    return res.status(404).send('Reports not found')
+                })
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
-    .post((req, res) => {
+    .post(async (req, res) => {
         try {
-            if (req.body.userID && req.body.totalBalance && req.body.startDate && req.body.endDate) {
+            if (req.body.userID && req.body.startDate && req.body.endDate) {
                 if (req.body.userID !== 123) {
                     return res.status(403).send('User is not authorized to create report')
                 }
-                const record = {
-                    reportID: 'py' + Math.floor((Math.random() * 99999) + 10000),
-                    confirmationCode: 'CTR' + Math.floor((Math.random() * 99999) + 10000),
-                }
-
-                reports.push({
-                    userID: req.body.userID,
-                    clientID: req.body.clientID,
-                    reportID: record.reportID,
-                    startDate: req.body.startDate,
-                    endDate: req.body.endDate,
-                    totalBalance: req.body.totalBalance
+                var parsedStartDate = Date.parse(req.body.startDate);
+                var startDate = new Date(parsedStartDate);
+                var parsedEndDate = Date.parse(req.body.endDate);
+                var endDate = new Date(parsedEndDate)
+                prisma.payment.findMany({
+                    where: {
+                        payment_date: {
+                            gte: startDate,
+                            lte: endDate
+                        }
+                    }
+                }).then((payments) => {
+                    if (!payments) {
+                        return res.status(404).send('No payments found')
+                    }
+                    let paymentIDs = []
+                    let totalBalance = 0.0
+                    payments.forEach((payment) => {
+                        paymentIDs.push(payment.payment_id)
+                        totalBalance += payment.total_amount
+                    })
+                    console.log(totalBalance)
+                    prisma.reports.create({
+                        data: {
+                            startDate: startDate,
+                            endDate: endDate,
+                            totalBalance: totalBalance,
+                            payment_id: JSON.stringify(paymentIDs)
+                        }
+                    }).then((report) => {
+                        return res.status(200).send(report)
+                    }).catch((e) => {
+                        console.log(e)
+                        return res.status(404).send('Report not created')
+                    })
+                }).catch((e) => {
+                    console.log(e)
+                    return res.status(404).send('Could not find payments')
                 })
-                return res.status(200).send(record)
             } else {
-                return res.status(400).send('Invalid report details')
+                return res.status(400).send('Invalid body. Must include userID, startDate, and endDate in body.')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -896,6 +1114,21 @@ router.route('/reports')
 *     produces:
 *       - application/json
 *     description: Get report by ID
+*     parameters:
+*       - in: body
+*         name: userID
+*         schema:
+*           description: User ID that is getting report
+*           required: true
+*           type: int
+*           example: {userID: 123}
+*       - in: path
+*         name: report_id
+*         schema:
+*           description: Report ID to retrieve
+*           required: true
+*           type: string
+*           example: 1
 *     responses:
 *       200:
 *         description: Returns report
@@ -913,6 +1146,35 @@ router.route('/reports')
 *     tags:
 *       - Reports
 *     description: Update report by ID
+*     parameters:
+*       - in: body
+*         name: userID
+*         schema:
+*           description: User ID that is updating report
+*           required: true
+*           type: int
+*           example: {userID: 123}
+*       - in: body
+*         name: startDate
+*         schema:
+*           description: Start date of payments to update report
+*           required: true
+*           type: string
+*           example: {startDate: "11/01/2022"}
+*       - in: body
+*         name: endDate
+*         schema:
+*           description: End date of payments to update report
+*           required: true
+*           type: string
+*           example: {endDate: "11/01/2022"}
+*       - in: path
+*         name: report_id
+*         schema:
+*           description: Report ID to update
+*           required: true
+*           type: string
+*           example: 1
 *     responses:
 *       200:
 *         description: Report updated
@@ -930,6 +1192,21 @@ router.route('/reports')
 *     tags:
 *       - Reports
 *     description: Delete report by ID
+*     parameters:
+*       - in: body
+*         name: userID
+*         schema:
+*           description: User ID that is deleting report
+*           required: true
+*           type: int
+*           example: {userID: 123}
+*       - in: path
+*         name: report_id
+*         schema:
+*           description: Report ID to delete
+*           required: true
+*           type: string
+*           example: 1
 *     responses:
 *       200:
 *         description: Report deleted
@@ -947,19 +1224,26 @@ router.route('/reports')
 router.route('/reports/:report_id')
     .get((req, res) => {
         try {
-            if (req.body.userID) {
+            if (req.body.userID && req.params.report_id) {
                 if (req.body.userID !== 123) {
                     return res.status(403).send('User is not authorized to create report')
                 }
-                if (req.params.report_id && req.params.report_id.startsWith('py')) {
-                    const report = reports.find(report => report.reportID === req.params.report_id)
-                    if (!report) {
-                        return res.status(404).send('No reports found')
-                    }
-                    return res.status(200).send(report)
-                } else {
+                if (!Number(req.params.report_id)) {
                     return res.status(400).send('Invalid report ID')
                 }
+                prisma.reports.findUnique({
+                    where: {
+                        report_id: Number(req.params.report_id)
+                    }
+                }).then((report) => {
+                    if (!report) {
+                        return res.status(404).send('Report not found')
+                    }
+                    return res.status(200).send(report)
+                }).catch((e) => {
+                    console.log(e)
+                    return res.status(404).send('Report not found')
+                })
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -967,38 +1251,51 @@ router.route('/reports/:report_id')
     })
     .put((req, res) => {
         try {
-            if (req.body.userID && req.body.totalBalance && req.body.startDate && req.body.endDate) {
+            if (req.body.userID && req.body.startDate && req.body.endDate && req.params.report_id) {
                 if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create report')
+                    return res.status(403).send('User is not authorized to update report')
                 }
-
-                if (req.params.report_id && req.params.report_id.startsWith('py')) {
-                    const report = reports.find(report => report.reportID === req.params.report_id)
-                    if (!report) {
-                        return res.status(404).send('No reports found')
+                var parsedStartDate = Date.parse(req.body.startDate);
+                var startDate = new Date(parsedStartDate);
+                var parsedEndDate = Date.parse(req.body.endDate);
+                var endDate = new Date(parsedEndDate)
+                prisma.payment.findMany({
+                    where: {
+                        payment_date: {
+                            gte: startDate,
+                            lte: endDate
+                        }
                     }
-                    const newReports = reports.filter(report => report.reportID !== req.params.report_id)
-                    reports = newReports
-
-                    const record = {
-                        reportID: report.reportID,
-                        confirmationCode: 'CTR' + Math.floor((Math.random() * 99999) + 10000),
+                }).then((payments) => {
+                    if (!payments) {
+                        return res.status(404).send('No payments found for report')
                     }
-
-                    reports.push({
-                        userID: req.body.userID,
-                        clientID: req.body.clientID,
-                        reportID: record.reportID,
-                        startDate: req.body.startDate,
-                        endDate: req.body.endDate,
-                        totalBalance: req.body.totalBalance
+                    let paymentIDs = []
+                    let totalBalance = 0.0
+                    payments.forEach((payment) => {
+                        paymentIDs.push(payment.payment_id)
+                        totalBalance += payment.total_amount
                     })
-
-
-                    return res.status(200).send(record)
-                } else {
-                    return res.status(400).send('Invalid report ID')
-                }
+                    prisma.reports.update({
+                        where: {
+                            report_id: Number(req.params.report_id)
+                        },
+                        data: {
+                            startDate: startDate,
+                            endDate: endDate,
+                            totalBalance: totalBalance,
+                            payment_id: JSON.stringify(paymentIDs)
+                        }
+                    }).then((report) => {
+                        return res.status(200).send(report)
+                    }).catch((e) => {
+                        console.log(e)
+                        return res.status(404).send('Report not updated')
+                    })
+                }).catch((e) => {
+                    console.log(e)
+                    return res.status(404).send('Could not find payments to create report')
+                })
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -1007,21 +1304,23 @@ router.route('/reports/:report_id')
     })
     .delete((req, res) => {
         try {
-            if (req.body.userID) {
+            if (req.body.userID && req.params.report_id) {
                 if (req.body.userID !== 123) {
                     return res.status(403).send('User is not authorized to create report')
                 }
-                if (req.params.report_id && req.params.report_id.startsWith('py')) {
-                    const report = reports.find(report => report.reportID === req.params.report_id)
-                    if (!report) {
-                        return res.status(404).send('No report found')
-                    }
-                    const newReports = reports.filter(report => report.reportID !== req.params.report_id)
-                    reports = newReports
-                    return res.status(200).send('Report deleted')
-                } else {
+                if (!Number(req.params.report_id)) {
                     return res.status(400).send('Invalid report ID')
                 }
+                prisma.reports.delete({
+                    where: {
+                        report_id: Number(req.params.report_id)
+                    }
+                }).then((report) => {
+                    return res.status(200).send("Report deleted")
+                }).catch((e) => {
+                    console.log(e)
+                    return res.status(404).send('Report not deleted')
+                })
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
