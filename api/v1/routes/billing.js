@@ -13,7 +13,7 @@ const router = express.Router()
 *       - application/json
 *     description: Get all payments localhost:3000/billing/payments
 *     parameters:
-*       - in: body
+*       - in: query
 *         name: userID
 *         schema:
 *           description: User ID that is getting payments
@@ -86,10 +86,10 @@ const router = express.Router()
 router.route('/payments')
     .get(async (req, res) => {
         try {
-            if (req.body.userID) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create payment')
-                }
+            if (req.query.userID) {
+                // if (req.query.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to create payment')
+                // }
                 prisma.payment.findMany().then((payments) => {
                     if (payments.length === 0) {
                         return res.status(404).send('Payments not found')
@@ -99,7 +99,7 @@ router.route('/payments')
                     return res.status(400).send('Invalid payment details')
                 })
             } else {
-                return res.status(400).send('Invalid body parameters. Must include userID')
+                return res.status(400).send('No query parameters provided. Must provide userID in query parameters')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -108,9 +108,9 @@ router.route('/payments')
     .post(async (req, res) => {
         try {
             if (req.body.userID && req.body.invoiceID && req.body.totalAmount && req.body.cardNum && req.body.cardExp) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create payment')
-                }
+                // if (req.body.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to create payment')
+                // }
                 let date = new Date()
                 prisma.payment.create({
                     data: {
@@ -159,13 +159,13 @@ router.route('/payments')
 *       - application/json
 *     description: Get payment details
 *     parameters:
-*       - in: body
+*       - in: query
 *         name: userID
 *         schema:
 *           description: User ID that is getting payment
 *           required: true
 *           type: int
-*           example: {userID: 123}
+*           example: 123
 *       - in: path
 *         name: payment_id
 *         schema:
@@ -282,10 +282,10 @@ router.route('/payments')
 router.route('/payments/:payment_id')
     .get(async (req, res) => {
         try {
-            if (req.body.userID && req.params.payment_id) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create payment')
-                }
+            if (req.query.userID && req.params.payment_id) {
+                // if (req.query.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to create payment')
+                // }
                 if (!Number(req.params.payment_id)) {
                     return res.status(400).send('Invalid payment ID')
                 }
@@ -303,7 +303,7 @@ router.route('/payments/:payment_id')
                     return res.status(400).send('Invalid payment details')
                 })
             } else {
-                return res.status(400).send('Invalid body and/or path parameters. Must include userID in body and payment_id in path')
+                return res.status(400).send('No query or path parameters. Must include userID in query and payment_id in path')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -348,6 +348,8 @@ router.route('/payments/:payment_id')
                 }).catch((e) => {
                     return res.status(400).send('Invalid payment details')
                 })
+            } else {
+                return res.status(400).send('No body parameters. Must include userID, invoiceID, totalAmount, cardNum, and cardExp in body')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -373,6 +375,8 @@ router.route('/payments/:payment_id')
                 }).catch((e) => {
                     return res.status(400).send('Invalid payment ID')
                 })
+            } else {
+                return res.status(400).send('No body or path parameters. Must include userID in body and payment_id in path')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -389,13 +393,13 @@ router.route('/payments/:payment_id')
 *       - application/json
 *     description: Get all invoices
 *     parameters:
-*       - in: body
+*       - in: query
 *         name: userID
 *         schema:
 *           description: User ID that is getting invoices
 *           required: true
 *           type: int
-*           example: {userID: 123}
+*           example: 123
 *     responses:
 *       200:
 *         description: Returns invoices
@@ -476,10 +480,10 @@ router.route('/payments/:payment_id')
 router.route('/invoices')
     .get(async (req, res) => {
         try {
-            if (req.body.userID) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create invoice')
-                }
+            if (req.query.userID) {
+                // if (req.query.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to create invoice')
+                // }
                 prisma.invoice.findMany().then((invoices) => {
                     if (invoices.length === 0) {
                         return res.status(404).send('Invoices not found')
@@ -489,7 +493,7 @@ router.route('/invoices')
                     return res.status(400).send('Invalid invoice details')
                 })
             } else {
-                return res.status(401).send('Invalid')
+                return res.status(401).send('No query parameters. Must include userID in query')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -525,7 +529,7 @@ router.route('/invoices')
                     return res.status(400).send('Invalid invoice details')
                 })
             } else {
-                return res.status(400).send('Invalid invoice details')
+                return res.status(400).send('No body parameters. Must include userID, invoiceTitle, diagnosis, totalAmount, minimumDue, dueDate, and icd10 in body')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -542,20 +546,20 @@ router.route('/invoices')
 *       - application/json
 *     description: ICD-10 invoice search
 *     parameters:
-*       - in: body
+*       - in: query
 *         name: userID
 *         schema:
-*           description: User ID that is approving invoice
+*           description: User ID that is searching invoices
 *           required: true
 *           type: int
-*           example: {userID: 123}
-*       - in: body
+*           example: 123
+*       - in: query
 *         name: icd10
 *         schema:
 *           description: ICD-10 search term
 *           required: true
 *           type: string
-*           example: {icd10: "J06.9"}
+*           example: "J06.9"
 *     responses:
 *       200:
 *         description: Returns invoices details
@@ -573,15 +577,15 @@ router.route('/invoices')
 router.route('/invoices/search/icd10')
     .get(async (req, res) => {
         try {
-            if (req.body.userID && req.body.icd10) {
-                if (req.body.userID !== 123) {
+            if (req.query.userID && req.query.icd10) {
+                if (req.query.userID !== 123) {
                     return res.status(403).send('User is not authorized to approve invoice')
                 }
 
                 prisma.invoice.findMany({
                     where: {
                         icd10: {
-                            contains: req.body.icd10
+                            contains: req.query.icd10
                         }
                     },
                 }).then((invoices) => {
@@ -590,7 +594,7 @@ router.route('/invoices/search/icd10')
                     return res.status(404).send('Invoices not found')
                 })
             } else {
-                return res.status(400).send('Invalid search details. Please provide a valid search term and user ID in body')
+                return res.status(400).send('No query parameters. Must include userID and icd10 search term in query')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -607,20 +611,20 @@ router.route('/invoices/search/icd10')
 *       - application/json
 *     description: Diagnosis invoice search
 *     parameters:
-*       - in: body
+*       - in: query
 *         name: userID
 *         schema:
-*           description: User ID that is approving invoice
+*           description: User ID that is searching invoice
 *           required: true
 *           type: int
-*           example: {userID: 123}
-*       - in: body
+*           example: 123
+*       - in: query
 *         name: diagnosis
 *         schema:
 *           description: Diagnosis search term
 *           required: true
 *           type: string
-*           example: {diagnosis: "cough"}
+*           example: "cough"
 *     responses:
 *       200:
 *         description: Returns invoices details
@@ -638,15 +642,15 @@ router.route('/invoices/search/icd10')
 router.route('/invoices/search/diagnosis')
     .get(async (req, res) => {
         try {
-            if (req.body.userID && req.body.diagnosis) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to approve invoice')
-                }
+            if (req.query.userID && req.query.diagnosis) {
+                // if (req.query.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to approve invoice')
+                // }
 
                 prisma.invoice.findMany({
                     where: {
                         diagnosis: {
-                            contains: req.body.diagnosis
+                            contains: req.query.diagnosis
                         }
                     },
                 }).then((invoices) => {
@@ -655,7 +659,7 @@ router.route('/invoices/search/diagnosis')
                     return res.status(404).send('Invoices not found')
                 })
             } else {
-                return res.status(400).send('Invalid search details. Please provide a diagnosis search term and user ID')
+                return res.status(400).send('No query parameters. Must include userID and diagnosis search term in query')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -672,13 +676,13 @@ router.route('/invoices/search/diagnosis')
 *       - application/json
 *     description: Get invoice details
 *     parameters:
-*       - in: body
+*       - in: query
 *         name: userID
 *         schema:
 *           description: User ID that is getting invoice
 *           required: true
 *           type: int
-*           example: {userID: 123}
+*           example: 123
 *       - in: path
 *         name: invoice_id
 *         schema:
@@ -809,10 +813,10 @@ router.route('/invoices/search/diagnosis')
 router.route('/invoices/:invoice_id')
     .get(async (req, res) => {
         try {
-            if (req.body.userID && req.params.invoice_id) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to access invoice')
-                }
+            if (req.query.userID && req.params.invoice_id) {
+                // if (req.query.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to access invoice')
+                // }
                 if (!Number(req.params.invoice_id)) {
                     return res.status(400).send('Invalid invoice ID')
                 }
@@ -828,6 +832,8 @@ router.route('/invoices/:invoice_id')
                 }).catch((e) => {
                     return res.status(400).send('Invalid invoice details')
                 })
+            } else {
+                return res.status(400).send('No query parameters. Must include userID and invoice_id in query')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -867,6 +873,8 @@ router.route('/invoices/:invoice_id')
                     console.log(e)
                     return res.status(400).send('Invalid invoice details')
                 })
+            } else {
+                return res.status(400).send('Incorrect body or path parameters. Must include userID, invoiceTitle, diagnosis, totalAmount, dueDate, minimumDue in body and invoice_id in path')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -890,6 +898,8 @@ router.route('/invoices/:invoice_id')
                 }).catch((e) => {
                     return res.status(404).send('Invoice not found')
                 })
+            } else {
+                return res.status(400).send('Incorrect body or path parameters. Must include userID in body and invoice_id in path')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -906,13 +916,13 @@ router.route('/invoices/:invoice_id')
 *       - application/json
 *     description: Approve an invoice
 *     parameters:
-*       - in: body
+*       - in: query
 *         name: userID
 *         schema:
 *           description: User ID that is approving invoice
 *           required: true
 *           type: int
-*           example: {userID: 123}
+*           example: 123
 *       - in: path
 *         name: invoice_id
 *         schema:
@@ -938,9 +948,9 @@ router.route('/invoices/:invoice_id/approve')
     .post(async (req, res) => {
         try {
             if (req.body.userID && req.params.invoice_id) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to approve invoice')
-                }
+                // if (req.body.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to approve invoice')
+                // }
 
                 if (req.params.invoice_id) {
                     prisma.invoice.update({
@@ -958,6 +968,8 @@ router.route('/invoices/:invoice_id/approve')
                 } else {
                     return res.status(400).send('Invalid invoice ID')
                 }
+            } else {
+                return res.status(400).send('No body or path parameters. Must include userID in body and invoice_id in path')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -974,13 +986,13 @@ router.route('/invoices/:invoice_id/approve')
 *       - application/json
 *     description: Get all reports
 *     parameters:
-*       - in: body
+*       - in: query
 *         name: userID
 *         schema:
 *           description: User ID that is creating report
 *           required: true
 *           type: int
-*           example: {userID: 123}
+*           example: 123
 *     responses:
 *       200:
 *         description: Returns reports
@@ -1033,10 +1045,10 @@ router.route('/invoices/:invoice_id/approve')
 router.route('/reports')
     .get(async (req, res) => {
         try {
-            if (req.body.userID) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create report')
-                }
+            if (req.query.userID) {
+                // if (req.query.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to create report')
+                // }
                 prisma.reports.findMany().then((reports) => {
                     if (!reports) {
                         return res.status(404).send('Reports not found')
@@ -1045,6 +1057,8 @@ router.route('/reports')
                 }).catch((e) => {
                     return res.status(404).send('Reports not found')
                 })
+            } else {
+                return res.status(400).send('No query parameters. Must include userID in query')
             }
         } catch (e) {
             console.log(e)
@@ -1054,9 +1068,9 @@ router.route('/reports')
     .post(async (req, res) => {
         try {
             if (req.body.userID && req.body.startDate && req.body.endDate) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create report')
-                }
+                // if (req.body.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to create report')
+                // }
                 var parsedStartDate = Date.parse(req.body.startDate);
                 var startDate = new Date(parsedStartDate);
                 var parsedEndDate = Date.parse(req.body.endDate);
@@ -1115,13 +1129,13 @@ router.route('/reports')
 *       - application/json
 *     description: Get report by ID
 *     parameters:
-*       - in: body
+*       - in: query
 *         name: userID
 *         schema:
 *           description: User ID that is getting report
 *           required: true
 *           type: int
-*           example: {userID: 123}
+*           example: 123
 *       - in: path
 *         name: report_id
 *         schema:
@@ -1224,10 +1238,10 @@ router.route('/reports')
 router.route('/reports/:report_id')
     .get((req, res) => {
         try {
-            if (req.body.userID && req.params.report_id) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create report')
-                }
+            if (req.query.userID && req.params.report_id) {
+                // if (req.query.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to create report')
+                // }
                 if (!Number(req.params.report_id)) {
                     return res.status(400).send('Invalid report ID')
                 }
@@ -1244,6 +1258,8 @@ router.route('/reports/:report_id')
                     console.log(e)
                     return res.status(404).send('Report not found')
                 })
+            } else {
+                return res.status(400).send('Invalid query or path parameters. Must include userID in query and report_id in path')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -1296,6 +1312,8 @@ router.route('/reports/:report_id')
                     console.log(e)
                     return res.status(404).send('Could not find payments to create report')
                 })
+            } else {
+                return res.status(400).send('Invalid body or path parameters. Must include userID in body, startDate in body, endDate in body, and report_id in path')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
@@ -1305,9 +1323,9 @@ router.route('/reports/:report_id')
     .delete((req, res) => {
         try {
             if (req.body.userID && req.params.report_id) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create report')
-                }
+                // if (req.body.userID !== 123) {
+                //     return res.status(403).send('User is not authorized to create report')
+                // }
                 if (!Number(req.params.report_id)) {
                     return res.status(400).send('Invalid report ID')
                 }
@@ -1321,6 +1339,8 @@ router.route('/reports/:report_id')
                     console.log(e)
                     return res.status(404).send('Report not deleted')
                 })
+            } else {
+                return res.status(400).send('Invalid body or path parameters. Must include userID in body and report_id in path')
             }
         } catch (e) {
             return res.status(500).send('Internal server error')
