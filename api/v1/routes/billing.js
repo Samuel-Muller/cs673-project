@@ -19,7 +19,7 @@ const router = express.Router()
 *           description: User ID that is getting payments
 *           required: true
 *           type: int
-*           example: {userID: 123}
+*           example:  123
 *     responses:
 *       200:
 *         description: Returns payments

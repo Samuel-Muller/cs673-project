@@ -2,6 +2,7 @@ const express = require('express')
 const swaggerUI = require('swagger-ui-express')
 const swaggerJSDoc = require('swagger-jsdoc');
 const billing = require('./api/v1/routes/billing')
+const cors = require('cors')
 const options = {
     failOnErrors: true,
     definition: {
@@ -18,6 +19,8 @@ const options = {
 const swaggerSpec = swaggerJSDoc(options);
 const app = express()
 const port = process.env.PORT || 3000;
+
+app.use(cors())
 
 // Log all requests and responses to the console
 app.use((req, res, next) => {
