@@ -312,9 +312,9 @@ router.route('/payments/:payment_id')
     .put(async (req, res) => {
         try {
             if (req.body.userID && req.body.totalAmount && req.body.cardNum && req.body.cardExp && req.params.payment_id) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create payment')
-                }
+                // if (req.body.userID !== 123) {
+                // return res.status(403).send('User is not authorized to create payment')
+                // }
                 if (!Number(req.params.payment_id)) {
                     return res.status(400).send('Invalid payment ID')
                 }
@@ -359,9 +359,9 @@ router.route('/payments/:payment_id')
     .delete(async (req, res) => {
         try {
             if (req.body.userID && req.params.payment_id) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create payment')
-                }
+                // if (req.body.userID !== 123) {
+                // return res.status(403).send('User is not authorized to create payment')
+                //}
                 if (!Number(req.params.payment_id)) {
                     return res.status(400).send('Invalid payment ID')
                 }
@@ -502,9 +502,9 @@ router.route('/invoices')
     .post(async (req, res) => {
         try {
             if (req.body.userID && req.body.invoiceTitle && req.body.diagnosis && req.body.totalAmount && req.body.minimumDue && req.body.dueDate && req.body.icd10) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create invoice')
-                }
+                // if (req.body.userID !== 123) {
+                // return res.status(403).send('User is not authorized to create invoice')
+                //}
                 let date = new Date()
                 var parsedDueDate = Date.parse(req.body.dueDate);
                 var dueDate = new Date(parsedDueDate);
@@ -578,9 +578,9 @@ router.route('/invoices/search/icd10')
     .get(async (req, res) => {
         try {
             if (req.query.userID && req.query.icd10) {
-                if (req.query.userID !== 123) {
-                    return res.status(403).send('User is not authorized to approve invoice')
-                }
+                //if (req.query.userID !== 123) {
+                //    return res.status(403).send('User is not authorized to approve invoice')
+                //}
 
                 prisma.invoice.findMany({
                     where: {
@@ -842,9 +842,9 @@ router.route('/invoices/:invoice_id')
     .put(async (req, res) => {
         try {
             if (req.body.userID && req.body.invoiceTitle && req.body.diagnosis && req.body.totalAmount && req.body.dueDate && req.body.minimumDue && req.params.invoice_id) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create invoice')
-                }
+                // if (req.body.userID !== 123) {
+                //    return res.status(403).send('User is not authorized to create invoice')
+                //}
                 if (!Number(req.params.invoice_id)) {
                     return res.status(400).send('Invalid invoice ID')
                 }
@@ -883,9 +883,9 @@ router.route('/invoices/:invoice_id')
     .delete(async (req, res) => {
         try {
             if (req.body.userID && req.params.invoice_id) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to create invoice')
-                }
+                //if (req.body.userID !== 123) {
+                //    return res.status(403).send('User is not authorized to create invoice')
+                //}
                 if (!Number(req.params.invoice_id)) {
                     return res.status(400).send('Invalid invoice ID')
                 }
@@ -1268,9 +1268,9 @@ router.route('/reports/:report_id')
     .put((req, res) => {
         try {
             if (req.body.userID && req.body.startDate && req.body.endDate && req.params.report_id) {
-                if (req.body.userID !== 123) {
-                    return res.status(403).send('User is not authorized to update report')
-                }
+                //if (req.body.userID !== 123) {
+                //    return res.status(403).send('User is not authorized to update report')
+                //}
                 var parsedStartDate = Date.parse(req.body.startDate);
                 var startDate = new Date(parsedStartDate);
                 var parsedEndDate = Date.parse(req.body.endDate);
