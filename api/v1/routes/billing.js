@@ -11,14 +11,14 @@ const router = express.Router()
 *       - Payments
 *     produces:
 *       - application/json
-*     description: Get all payments localhost:3000/billing/payments
+*     description: Get all payments
 *     parameters:
 *       - in: query
 *         name: userID
 *         schema:
 *           description: User ID that is getting payments
 *           required: true
-*           type: int
+*           type: string
 *           example:  123
 *     responses:
 *       200:
@@ -34,43 +34,33 @@ const router = express.Router()
 *   post:
 *     tags:
 *       - Payments
+*     produces:
+*       - application/json
 *     description: Create new payment
-*     parameters:
-*       - in: body
-*         name: userID
-*         schema:
-*           description: User ID that is creating payment
-*           required: true
-*           type: int
-*           example: {userID: 123}
-*       - in: body
-*         name: invoiceID
-*         schema:
-*           description: Invoice ID that payment is paying towards
-*           required: true
-*           type: int
-*           example: {invoiceID: 123}
-*       - in: body
-*         name: totalAmount
-*         schema:
-*           description: Total amount for this payment
-*           required: true
-*           type: float
-*           example: {totalAmount: 123.00}
-*       - in: body
-*         name: cardNum
-*         schema:
-*           description: Credit card number
-*           required: true
-*           type: integer
-*           example: {cardNum: 1234567812345678}
-*       - in: body
-*         name: cardExp
-*         schema:
-*           description: Credit card experation
-*           required: true
-*           type: integer
-*           example: {cardNum: 0129}
+*     requestBody:
+*       description: Payment object
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               userID:
+*                 type: integer
+*               invoiceID:
+*                 type: integer
+*               totalAmount:
+*                 type: float
+*               cardNum:
+*                 type: string
+*               cardExp:
+*                 type: string
+*             example:
+*               userID: 123
+*               invoiceID: 1
+*               totalAmount: 100.00
+*               cardNum: "1234567890123456"
+*               cardExp: "0123"
 *     responses:
 *       200:
 *         description: Payment created
@@ -96,12 +86,14 @@ router.route('/payments')
                     }
                     return res.status(200).send(payments)
                 }).catch((e) => {
+                    console.log(e)
                     return res.status(400).send('Invalid payment details')
                 })
             } else {
                 return res.status(400).send('No query parameters provided. Must provide userID in query parameters')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -114,29 +106,33 @@ router.route('/payments')
                 let date = new Date()
                 prisma.payment.create({
                     data: {
-                        user_id: req.body.userID,
-                        total_amount: req.body.totalAmount,
-                        invoice_id: req.body.invoiceID,
-                        payment_date: date,
-                        insurance_id: 0,
-                        card_number: req.body.cardNum,
-                        card_exp: req.body.cardExp,
+                        userID: req.body.userID,
+                        totalAmount: req.body.totalAmount,
+                        invoiceID: req.body.invoiceID,
+                        paymentDate: date,
+                        insuranceID: 0,
+                        cardNum: req.body.cardNum,
+                        cardExp: req.body.cardExp,
                     }
                 }).then((payment) => {
-                    // update invoice after successful payment
-                    // prisma.invoice.update({
-                    //     where: {
-                    //         invoice_id: req.body.invoiceID
-                    //     },
-                    //     data: {
-                    //         last_payment_date: date,
-                    //         last_payment_amount: req.body.totalAmount,
-                    //     }
-                    // }).then((invoice) => {
-                    return res.status(200).send(payment)
-                    // }).catch((e) => {
-                    //     return res.status(400).send('Could not update invoice after payment')
-                    // })
+                    //update invoice after successful payment
+                    prisma.invoice.update({
+                        where: {
+                            invoiceID: req.body.invoiceID
+                        },
+                        data: {
+                            lastPaymentDate: date,
+                            //last_payment_amount: req.body.totalAmount,
+                            amountPaid: {
+                                increment: req.body.totalAmount
+                            }
+                        }
+                    }).then((invoice) => {
+                        return res.status(200).send(payment)
+                    }).catch((e) => {
+                        console.log(e)
+                        return res.status(400).send('Could not update invoice after payment')
+                    })
                 }).catch((e) => {
                     console.log(e)
                     return res.status(400).send('Invalid payment details')
@@ -145,6 +141,7 @@ router.route('/payments')
                 return res.status(400).send('Invalid body parameters. Must include userID, invoiceID, totalAmount, cardNum, and cardExp')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -164,7 +161,7 @@ router.route('/payments')
 *         schema:
 *           description: User ID that is getting payment
 *           required: true
-*           type: int
+*           type: string
 *           example: 123
 *       - in: path
 *         name: payment_id
@@ -190,42 +187,33 @@ router.route('/payments')
 *     tags:
 *       - Payments
 *     description: Update payment details
+*     produces:
+*       - application/json
+*     requestBody:
+*       description: Payment object
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               userID:
+*                 type: integer
+*               invoiceID:
+*                 type: integer
+*               totalAmount:
+*                 type: float
+*               cardNum:
+*                 type: string
+*               cardExp:
+*                 type: string
+*             example:
+*               userID: 123
+*               invoiceID: 1
+*               totalAmount: 100.00
+*               cardNum: "1234567890123456"
+*               cardExp: "0123"
 *     parameters:
-*       - in: body
-*         name: userID
-*         schema:
-*           description: User ID that is updating payment
-*           required: true
-*           type: int
-*           example: {userID: 123}
-*       - in: body
-*         name: invoiceID
-*         schema:
-*           description: Invoice ID that payment is being updated
-*           required: true
-*           type: int
-*           example: {invoiceID: 123}
-*       - in: body
-*         name: totalAmount
-*         schema:
-*           description: Total amount for this payment
-*           required: true
-*           type: float
-*           example: {totalAmount: 123.00}
-*       - in: body
-*         name: cardNum
-*         schema:
-*           description: Credit card number
-*           required: true
-*           type: integer
-*           example: {cardNum: 1234567812345678}
-*       - in: body
-*         name: cardExp
-*         schema:
-*           description: Credit card experation
-*           required: true
-*           type: integer
-*           example: {cardNum: 0129}
 *       - in: path
 *         name: payment_id
 *         schema:
@@ -250,20 +238,25 @@ router.route('/payments')
 *     tags:
 *       - Payments
 *     description: Delete payment by ID
+*     requestBody:
+*       description: User ID
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               userID:
+*                 type: integer
+*             example:
+*               userID: 123
 *     parameters:
-*       - in: body
-*         name: userID
-*         schema:
-*           description: User ID that is deleting payment
-*           required: true
-*           type: int
-*           example: {userID: 123}
 *       - in: path
 *         name: payment_id
 *         schema:
 *           description: Payment ID that is being deleted
 *           required: true
-*           type: int
+*           type: string
 *           example: 1
 *     responses:
 *       200:
@@ -291,7 +284,7 @@ router.route('/payments/:payment_id')
                 }
                 prisma.payment.findUnique({
                     where: {
-                        payment_id: Number(req.params.payment_id)
+                        paymentID: Number(req.params.payment_id)
                     }
                 }).then((payments) => {
                     if (!payments) {
@@ -306,6 +299,7 @@ router.route('/payments/:payment_id')
                 return res.status(400).send('No query or path parameters. Must include userID in query and payment_id in path')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -321,24 +315,27 @@ router.route('/payments/:payment_id')
                 let date = new Date()
                 prisma.payment.update({
                     where: {
-                        payment_id: Number(req.params.payment_id)
+                        paymentID: Number(req.params.payment_id)
                     },
                     data: {
-                        user_id: req.body.userID,
-                        total_amount: req.body.totalAmount,
-                        insurance_id: 0,
-                        card_number: req.body.cardNum,
-                        card_exp: req.body.cardExp,
+                        userID: req.body.userID,
+                        totalAmount: req.body.totalAmount,
+                        insuranceID: 0,
+                        cardNum: req.body.cardNum,
+                        cardExp: req.body.cardExp,
                     }
                 }).then((payment) => {
                     // update invoice after updating payment
                     prisma.invoice.update({
                         where: {
-                            invoice_id: req.body.invoiceID
+                            invoiceID: req.body.invoiceID
                         },
                         data: {
-                            last_payment_date: date,
-                            last_payment_amount: req.body.totalAmount,
+                            lastPaymentDate: date,
+                            //last_payment_amount: req.body.totalAmount,
+                            amountPaid: {
+                                increment: req.body.totalAmount
+                            }
                         }
                     }).then((invoice) => {
                         return res.status(200).send(payment)
@@ -346,12 +343,14 @@ router.route('/payments/:payment_id')
                         return res.status(400).send('Could not update invoice after payment')
                     })
                 }).catch((e) => {
+                    console.log(e)
                     return res.status(400).send('Invalid payment details')
                 })
             } else {
                 return res.status(400).send('No body parameters. Must include userID, invoiceID, totalAmount, cardNum, and cardExp in body')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
 
@@ -365,20 +364,36 @@ router.route('/payments/:payment_id')
                 if (!Number(req.params.payment_id)) {
                     return res.status(400).send('Invalid payment ID')
                 }
+                if (!Number(req.body.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 prisma.payment.delete({
                     where: {
-                        payment_id: Number(req.params.payment_id)
+                        paymentID: Number(req.params.payment_id)
                     }
                 }).then((payment) => {
-                    //TODO: update invoice after deleting payment
+                    // update invoice after updating payment
+                    // prisma.invoice.update({
+                    //     where: {
+                    //         invoiceID: req.body.invoiceID
+                    //     },
+                    //     data: {
+                    //         lastPaymentDate: date,
+                    //         //last_payment_amount: req.body.totalAmount,
+                    //         amountPaid: {
+                    //             decrement: req.body.totalAmount
+                    //         }
+                    //     }
                     return res.status(200).send('Payment deleted')
                 }).catch((e) => {
+                    console.log(e)
                     return res.status(400).send('Invalid payment ID')
                 })
             } else {
                 return res.status(400).send('No body or path parameters. Must include userID in body and payment_id in path')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -398,7 +413,7 @@ router.route('/payments/:payment_id')
 *         schema:
 *           description: User ID that is getting invoices
 *           required: true
-*           type: int
+*           type: integer
 *           example: 123
 *     responses:
 *       200:
@@ -415,56 +430,41 @@ router.route('/payments/:payment_id')
 *     tags:
 *       - Invoices
 *     description: Create new invoice
-*     parameters:
-*       - in: body
-*         name: userID
-*         schema:
-*           description: User ID that is creating invoice
-*           required: true
-*           type: int
-*           example: {userID: 123}
-*       - in: body
-*         name: invoiceTitle
-*         schema:
-*           description: Invoice title 
-*           required: true
-*           type: string
-*           example: {invoiceTitle: "Mike Smith Appointment 11/30/2022"}
-*       - in: body
-*         name: diagnosis
-*         schema:
-*           description: Diagnosis description
-*           required: true
-*           type: string
-*           example: {diagnosis: "Light cough"}
-*       - in: body
-*         name: totalAmount
-*         schema:
-*           description: Total amount due for invoice
-*           required: true
-*           type: float
-*           example: {totalAmount: 55.00}
-*       - in: body
-*         name: minimumDue
-*         schema:
-*           description: Minimum due for a payment
-*           required: true
-*           type: float
-*           example: {minimumDue: 25.00}
-*       - in: body
-*         name: dueDate
-*         schema:
-*           description: Date for invoice to be paid by
-*           required: true
-*           type: string
-*           example: "12/30/2022"
-*       - in: body
-*         name: icd10
-*         schema:
-*           description: List of ICD-10 codes
-*           required: true
-*           type: array
-*           example: ["J06.9", "J20.9"]
+*     produces:
+*       - application/json
+*     requestBody:
+*       description: Invoice object
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               userID:
+*                 type: integer
+*               payerID:
+*                 type: integer
+*               invoiceTitle:
+*                 type: string
+*               diagnosis:
+*                 type: string
+*               totalAmount:
+*                 type: float
+*               minimumDue:
+*                 type: float
+*               dueDate:
+*                 type: string
+*               icd10:
+*                 type: string
+*             example:
+*               userID: 123
+*               payerID: 203
+*               invoiceTitle: "Invoice 1"
+*               diagnosis: "Diagnosis 1"
+*               totalAmount: 100.00
+*               minimumDue: 50.00
+*               dueDate: "01/10/2023"
+*               icd10: "['A0.01', 'B0.02']"
 *     responses:
 *       200:
 *         description: Invoice created
@@ -484,41 +484,57 @@ router.route('/invoices')
                 // if (req.query.userID !== 123) {
                 //     return res.status(403).send('User is not authorized to create invoice')
                 // }
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 prisma.invoice.findMany().then((invoices) => {
                     if (invoices.length === 0) {
                         return res.status(404).send('Invoices not found')
                     }
                     return res.status(200).send(invoices)
                 }).catch((e) => {
+                    console.log(e)
                     return res.status(400).send('Invalid invoice details')
                 })
             } else {
                 return res.status(401).send('No query parameters. Must include userID in query')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
     .post(async (req, res) => {
         try {
-            if (req.body.userID && req.body.invoiceTitle && req.body.diagnosis && req.body.totalAmount && req.body.minimumDue && req.body.dueDate && req.body.icd10) {
+            if (req.body.userID && req.body.invoiceTitle && req.body.diagnosis && req.body.totalAmount && req.body.minimumDue && req.body.dueDate && req.body.icd10 && req.body.payerID) {
                 // if (req.body.userID !== 123) {
                 // return res.status(403).send('User is not authorized to create invoice')
                 //}
+                if (!Number(req.body.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
+                if (!Number(req.body.totalAmount)) {
+                    return res.status(400).send('Invalid total amount')
+                }
+                if (!Number(req.body.minimumDue)) {
+                    return res.status(400).send('Invalid minimum due amount')
+                }
                 let date = new Date()
                 var parsedDueDate = Date.parse(req.body.dueDate);
                 var dueDate = new Date(parsedDueDate);
                 prisma.invoice.create({
                     data: {
-                        user_id: req.body.userID,
-                        insurance_id: 0,
-                        invoice_title: req.body.invoiceTitle,
-                        invoice_date: date,
+                        userID: req.body.userID,
+                        payerID: req.body.payerID,
+                        insuranceID: 0,
+                        invoiceTitle: req.body.invoiceTitle,
+                        invoiceDate: date,
                         diagnosis: req.body.diagnosis,
-                        total_amount: req.body.totalAmount,
-                        due_date: dueDate,
-                        minimum_due: req.body.minimumDue,
-                        last_payment_date: null,
+                        totalAmount: Number(req.body.totalAmount),
+                        dueDate: dueDate,
+                        minimumDue: Number(req.body.minimumDue),
+                        amountPaid: 0,
+                        lastPaymentDate: null,
                         approved: 0,
                         icd10: JSON.stringify(req.body.icd10)
                     }
@@ -529,9 +545,10 @@ router.route('/invoices')
                     return res.status(400).send('Invalid invoice details')
                 })
             } else {
-                return res.status(400).send('No body parameters. Must include userID, invoiceTitle, diagnosis, totalAmount, minimumDue, dueDate, and icd10 in body')
+                return res.status(400).send('No body parameters. Must include userID, payerID, invoiceTitle, diagnosis, totalAmount, minimumDue, dueDate, and icd10 in body')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -551,7 +568,7 @@ router.route('/invoices')
 *         schema:
 *           description: User ID that is searching invoices
 *           required: true
-*           type: int
+*           type: string
 *           example: 123
 *       - in: query
 *         name: icd10
@@ -581,7 +598,9 @@ router.route('/invoices/search/icd10')
                 //if (req.query.userID !== 123) {
                 //    return res.status(403).send('User is not authorized to approve invoice')
                 //}
-
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 prisma.invoice.findMany({
                     where: {
                         icd10: {
@@ -591,12 +610,14 @@ router.route('/invoices/search/icd10')
                 }).then((invoices) => {
                     return res.status(200).send(invoices)
                 }).catch((e) => {
+                    console.log(e)
                     return res.status(404).send('Invoices not found')
                 })
             } else {
                 return res.status(400).send('No query parameters. Must include userID and icd10 search term in query')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -616,7 +637,7 @@ router.route('/invoices/search/icd10')
 *         schema:
 *           description: User ID that is searching invoice
 *           required: true
-*           type: int
+*           type: string
 *           example: 123
 *       - in: query
 *         name: diagnosis
@@ -656,12 +677,14 @@ router.route('/invoices/search/diagnosis')
                 }).then((invoices) => {
                     return res.status(200).send(invoices)
                 }).catch((e) => {
+                    console.log(e)
                     return res.status(404).send('Invoices not found')
                 })
             } else {
                 return res.status(400).send('No query parameters. Must include userID and diagnosis search term in query')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -681,7 +704,7 @@ router.route('/invoices/search/diagnosis')
 *         schema:
 *           description: User ID that is getting invoice
 *           required: true
-*           type: int
+*           type: string
 *           example: 123
 *       - in: path
 *         name: invoice_id
@@ -706,57 +729,49 @@ router.route('/invoices/search/diagnosis')
 *   put:
 *     tags:
 *       - Invoices
+*     produces:
+*       - application/json
 *     description: Update invoice details
+*     requestBody:
+*       description: Invoice object
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               userID:
+*                 type: integer
+*               payerID:
+*                 type: integer
+*               invoiceTitle:
+*                 type: string
+*               diagnosis:
+*                 type: string
+*               totalAmount:
+*                 type: float
+*               icd10:
+*                 type: string
+*               minimumDue:
+*                 type: float
+*               dueDate:
+*                 type: string
+*               invoiceDate:
+*                 type: string
+*               amountPaid:
+*                 type: float
+*             example:
+*               userID: 123
+*               payerID: 203
+*               invoiceTitle: "Invoice 1"
+*               diagnosis: "Cough"
+*               totalAmount: 100.00
+*               minimumDue: 50.00
+*               dueDate: "01/10/2023"
+*               invoiceDate: "01/01/2021"
+*               amountPaid: 50.00
+*               icd10: "['J20.9']"
 *     parameters:
-*       - in: body
-*         name: userID
-*         schema:
-*           description: User ID that is creating invoice
-*           required: true
-*           type: int
-*           example: {userID: 123}
-*       - in: body
-*         name: invoiceTitle
-*         schema:
-*           description: Invoice title 
-*           required: true
-*           type: string
-*           example: {invoiceTitle: "Mike Smith Appointment 11/30/2022"}
-*       - in: body
-*         name: diagnosis
-*         schema:
-*           description: Diagnosis description
-*           required: true
-*           type: string
-*           example: {diagnosis: "Light cough"}
-*       - in: body
-*         name: totalAmount
-*         schema:
-*           description: Total amount due for invoice
-*           required: true
-*           type: float
-*           example: {totalAmount: 55.00}
-*       - in: body
-*         name: minimumDue
-*         schema:
-*           description: Minimum due for a payment
-*           required: true
-*           type: float
-*           example: {minimumDue: 25.00}
-*       - in: body
-*         name: dueDate
-*         schema:
-*           description: Date for invoice to be paid by
-*           required: true
-*           type: string
-*           example: "12/30/2022"
-*       - in: body
-*         name: icd10
-*         schema:
-*           description: List of ICD-10 codes
-*           required: true
-*           type: array
-*           example: ["J06.9", "J20.9"]
 *       - in: path
 *         name: invoice_id
 *         schema:
@@ -780,15 +795,22 @@ router.route('/invoices/search/diagnosis')
 *   delete:
 *     tags:
 *       - Invoices
+*     produces:
+*       - application/json
 *     description: Delete invoice by ID
+*     requestBody:
+*       description: User ID
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               userID:
+*                 type: integer
+*             example:
+*               userID: 123
 *     parameters:
-*       - in: body
-*         name: userID
-*         schema:
-*           description: User ID that is creating invoice
-*           required: true
-*           type: int
-*           example: {userID: 123}
 *       - in: path
 *         name: invoice_id
 *         schema:
@@ -822,7 +844,7 @@ router.route('/invoices/:invoice_id')
                 }
                 prisma.invoice.findUnique({
                     where: {
-                        invoice_id: Number(req.params.invoice_id)
+                        invoiceID: Number(req.params.invoice_id)
                     }
                 }).then((invoice) => {
                     if (!invoice) {
@@ -836,12 +858,13 @@ router.route('/invoices/:invoice_id')
                 return res.status(400).send('No query parameters. Must include userID and invoice_id in query')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
     .put(async (req, res) => {
         try {
-            if (req.body.userID && req.body.invoiceTitle && req.body.diagnosis && req.body.totalAmount && req.body.dueDate && req.body.minimumDue && req.params.invoice_id) {
+            if (req.body.userID && req.body.payerID && req.body.invoiceTitle && req.body.diagnosis && req.body.totalAmount && req.body.dueDate && req.body.minimumDue && req.params.invoice_id) {
                 // if (req.body.userID !== 123) {
                 //    return res.status(403).send('User is not authorized to create invoice')
                 //}
@@ -854,17 +877,19 @@ router.route('/invoices/:invoice_id')
 
                 prisma.invoice.update({
                     where: {
-                        invoice_id: Number(req.params.invoice_id)
+                        invoiceID: Number(req.params.invoice_id)
                     },
                     data: {
-                        user_id: req.body.userID,
-                        insurance_id: 0,
-                        invoice_title: req.body.invoiceTitle,
-                        invoice_date: date,
+                        userID: req.body.userID,
+                        payerID: req.body.payerID,
+                        insuranceID: 0,
+                        invoiceTitle: req.body.invoiceTitle,
+                        invoiceDate: date,
                         diagnosis: req.body.diagnosis,
-                        total_amount: req.body.totalAmount,
-                        due_date: dueDate,
-                        minimum_due: req.body.minimumDue,
+                        totalAmount: req.body.totalAmount,
+                        dueDate: dueDate,
+                        minimumDue: req.body.minimumDue,
+                        amountPaid: req.body.amountPaid,
                         icd10: JSON.stringify(req.body.icd10)
                     }
                 }).then((invoice) => {
@@ -874,9 +899,10 @@ router.route('/invoices/:invoice_id')
                     return res.status(400).send('Invalid invoice details')
                 })
             } else {
-                return res.status(400).send('Incorrect body or path parameters. Must include userID, invoiceTitle, diagnosis, totalAmount, dueDate, minimumDue in body and invoice_id in path')
+                return res.status(400).send('Incorrect body or path parameters. Must include userID, payerID, invoiceTitle, diagnosis, totalAmount, dueDate, minimumDue, and amountPaid in body and invoice_id in path')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -891,17 +917,19 @@ router.route('/invoices/:invoice_id')
                 }
                 prisma.invoice.delete({
                     where: {
-                        invoice_id: Number(req.params.invoice_id)
+                        invoiceID: Number(req.params.invoice_id)
                     }
                 }).then((invoice) => {
                     return res.status(200).send('Invoice deleted')
                 }).catch((e) => {
+                    console.log(e)
                     return res.status(404).send('Invoice not found')
                 })
             } else {
                 return res.status(400).send('Incorrect body or path parameters. Must include userID in body and invoice_id in path')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -921,7 +949,7 @@ router.route('/invoices/:invoice_id')
 *         schema:
 *           description: User ID that is approving invoice
 *           required: true
-*           type: int
+*           type: string
 *           example: 123
 *       - in: path
 *         name: invoice_id
@@ -955,7 +983,7 @@ router.route('/invoices/:invoice_id/approve')
                 if (req.params.invoice_id) {
                     prisma.invoice.update({
                         where: {
-                            invoice_id: Number(req.params.invoice_id)
+                            invoiceID: Number(req.params.invoice_id)
                         },
                         data: {
                             approved: 1
@@ -963,6 +991,7 @@ router.route('/invoices/:invoice_id/approve')
                     }).then((invoice) => {
                         return res.status(200).send(invoice)
                     }).catch((e) => {
+                        console.log(e)
                         return res.status(404).send('Invoice not found')
                     })
                 } else {
@@ -972,6 +1001,7 @@ router.route('/invoices/:invoice_id/approve')
                 return res.status(400).send('No body or path parameters. Must include userID in body and invoice_id in path')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })
@@ -991,7 +1021,7 @@ router.route('/invoices/:invoice_id/approve')
 *         schema:
 *           description: User ID that is creating report
 *           required: true
-*           type: int
+*           type: string
 *           example: 123
 *     responses:
 *       200:
@@ -1007,29 +1037,27 @@ router.route('/invoices/:invoice_id/approve')
 *   post:
 *     tags:
 *       - Reports
+*     produces:
+*       - application/json
 *     description: Create new report
-*     parameters:
-*       - in: body
-*         name: userID
-*         schema:
-*           description: User ID that is creating report
-*           required: true
-*           type: int
-*           example: {userID: 123}
-*       - in: body
-*         name: startDate
-*         schema:
-*           description: Start date of payments to create report
-*           required: true
-*           type: string
-*           example: {startDate: "11/01/2022"}
-*       - in: body
-*         name: endDate
-*         schema:
-*           description: End date of payments to create report
-*           required: true
-*           type: string
-*           example: {endDate: "11/01/2022"}
+*     requestBody:
+*       description: Report object
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               userID:
+*                 type: integer
+*               startDate:
+*                 type: string
+*               endDate:
+*                 type: string
+*             example:
+*               userID: 123
+*               startDate: "01/01/2022"
+*               endDate: "12/31/2022"
 *     responses:
 *       200:
 *         description: Report created
@@ -1055,6 +1083,7 @@ router.route('/reports')
                     }
                     return res.status(200).send(reports)
                 }).catch((e) => {
+                    console.log(e)
                     return res.status(404).send('Reports not found')
                 })
             } else {
@@ -1089,16 +1118,15 @@ router.route('/reports')
                     let paymentIDs = []
                     let totalBalance = 0.0
                     payments.forEach((payment) => {
-                        paymentIDs.push(payment.payment_id)
+                        paymentIDs.push(payment.paymentID)
                         totalBalance += payment.total_amount
                     })
-                    console.log(totalBalance)
                     prisma.reports.create({
                         data: {
                             startDate: startDate,
                             endDate: endDate,
                             totalBalance: totalBalance,
-                            payment_id: JSON.stringify(paymentIDs)
+                            paymentID: JSON.stringify(paymentIDs)
                         }
                     }).then((report) => {
                         return res.status(200).send(report)
@@ -1134,7 +1162,7 @@ router.route('/reports')
 *         schema:
 *           description: User ID that is getting report
 *           required: true
-*           type: int
+*           type: string
 *           example: 123
 *       - in: path
 *         name: report_id
@@ -1159,29 +1187,31 @@ router.route('/reports')
 *   put:
 *     tags:
 *       - Reports
+*     produces:
+*       - application/json
 *     description: Update report by ID
+*     requestBody:
+*       description: Report object
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               userID:
+*                 type: integer
+*               startDate:
+*                 type: string
+*               endDate:
+*                 type: string
+*               paymentID:
+*                 type: string
+*             example:
+*               userID: 123
+*               startDate: "01/01/2022"
+*               endDate: "12/31/2022"
+*               paymentID: "[1,2,3]"
 *     parameters:
-*       - in: body
-*         name: userID
-*         schema:
-*           description: User ID that is updating report
-*           required: true
-*           type: int
-*           example: {userID: 123}
-*       - in: body
-*         name: startDate
-*         schema:
-*           description: Start date of payments to update report
-*           required: true
-*           type: string
-*           example: {startDate: "11/01/2022"}
-*       - in: body
-*         name: endDate
-*         schema:
-*           description: End date of payments to update report
-*           required: true
-*           type: string
-*           example: {endDate: "11/01/2022"}
 *       - in: path
 *         name: report_id
 *         schema:
@@ -1205,15 +1235,22 @@ router.route('/reports')
 *   delete:
 *     tags:
 *       - Reports
+*     produces:
+*       - application/json
 *     description: Delete report by ID
+*     requestBody:
+*       description: User ID
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               userID:
+*                 type: integer
+*             example:
+*               userID: 123
 *     parameters:
-*       - in: body
-*         name: userID
-*         schema:
-*           description: User ID that is deleting report
-*           required: true
-*           type: int
-*           example: {userID: 123}
 *       - in: path
 *         name: report_id
 *         schema:
@@ -1247,7 +1284,7 @@ router.route('/reports/:report_id')
                 }
                 prisma.reports.findUnique({
                     where: {
-                        report_id: Number(req.params.report_id)
+                        reportID: Number(req.params.report_id)
                     }
                 }).then((report) => {
                     if (!report) {
@@ -1294,13 +1331,13 @@ router.route('/reports/:report_id')
                     })
                     prisma.reports.update({
                         where: {
-                            report_id: Number(req.params.report_id)
+                            reportID: Number(req.params.report_id)
                         },
                         data: {
                             startDate: startDate,
                             endDate: endDate,
                             totalBalance: totalBalance,
-                            payment_id: JSON.stringify(paymentIDs)
+                            paymentID: JSON.stringify(paymentIDs)
                         }
                     }).then((report) => {
                         return res.status(200).send(report)
@@ -1316,6 +1353,7 @@ router.route('/reports/:report_id')
                 return res.status(400).send('Invalid body or path parameters. Must include userID in body, startDate in body, endDate in body, and report_id in path')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
 
@@ -1331,7 +1369,7 @@ router.route('/reports/:report_id')
                 }
                 prisma.reports.delete({
                     where: {
-                        report_id: Number(req.params.report_id)
+                        reportID: Number(req.params.report_id)
                     }
                 }).then((report) => {
                     return res.status(200).send("Report deleted")
@@ -1343,6 +1381,7 @@ router.route('/reports/:report_id')
                 return res.status(400).send('Invalid body or path parameters. Must include userID in body and report_id in path')
             }
         } catch (e) {
+            console.log(e)
             return res.status(500).send('Internal server error')
         }
     })

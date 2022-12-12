@@ -10,44 +10,46 @@ datasource db {
 }
 
 model payment {
-  payment_id   Int      @id @default(autoincrement())
-  user_id      Int
-  invoice_id   Int
-  insurance_id Int
-  total_amount Float    @db.Float
-  payment_date DateTime @db.Date
-  card_number  Int
-  card_exp     Int
+  paymentID   Int      @id @default(autoincrement())
+  userID      Int
+  invoiceID   Int
+  insuranceID Int
+  totalAmount Float    @db.Float
+  paymentDate DateTime @db.Date
+  cardNum     String   @db.VarChar(100)
+  cardExp     String   @db.VarChar(100)
 }
 
 model insurance {
-  insurance_id   Int      @id @default(autoincrement())
-  insurance_date DateTime @db.DateTime(0)
-  client_name    String   @db.VarChar(45)
-  invoice_title  String   @db.VarChar(45)
-  invoice_amount Float    @db.Float
-  amount_due     Float    @db.Float
+  insuranceID   Int      @id @default(autoincrement())
+  insuranceDate DateTime @db.DateTime(0)
+  clientName    String   @db.VarChar(45)
+  invoiceTitle  String   @db.VarChar(45)
+  invoiceAmount Float    @db.Float
+  amountDue     Float    @db.Float
 }
 
 model invoice {
-  invoice_id        Int       @id @default(autoincrement())
-  user_id           Int
-  insurance_id      Int
-  invoice_title     String    @db.VarChar(45)
-  diagnosis         String    @db.VarChar(10000)
-  total_amount      Float     @db.Float
-  minimum_due       Float     @db.Float
-  due_date          DateTime  @db.DateTime(0)
-  last_payment_date DateTime? @db.DateTime(0)
-  invoice_date      DateTime  @db.DateTime(0)
-  approved          Int?
-  icd10             String    @db.VarChar(1000)
+  invoiceID       Int       @id @default(autoincrement())
+  userID          Int
+  insuranceID     Int
+  payerID         Int
+  invoiceTitle    String    @db.VarChar(45)
+  diagnosis       String    @db.VarChar(10000)
+  totalAmount     Float     @db.Float
+  minimumDue      Float     @db.Float
+  dueDate         DateTime  @db.DateTime(0)
+  lastPaymentDate DateTime? @db.DateTime(0)
+  invoiceDate     DateTime  @db.DateTime(0)
+  amountPaid      Float     @db.Float
+  approved        Int?
+  icd10           String?   @db.VarChar(100)
 }
 
 model reports {
-  report_id    Int      @id @default(autoincrement())
-  startDate    DateTime @db.Date
-  endDate      DateTime @db.Date
+  reportID     Int      @id @default(autoincrement())
+  startDate    DateTime @db.DateTime(0)
+  endDate      DateTime @db.DateTime(0)
   totalBalance Float    @db.Float
-  payment_id   String?  @db.VarChar(1000)
+  paymentID    String?  @db.VarChar(45)
 }
