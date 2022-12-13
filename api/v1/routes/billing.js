@@ -537,7 +537,7 @@ router.route('/invoices')
                         amountPaid: 0,
                         lastPaymentDate: null,
                         approved: 0,
-                        icd10: JSON.stringify(req.body.icd10)
+                        icd10: JSON.parse(req.body.icd10)
                     }
                 }).then((invoice) => {
                     return res.status(200).send(invoice)
@@ -891,7 +891,7 @@ router.route('/invoices/:invoice_id')
                         dueDate: dueDate,
                         minimumDue: req.body.minimumDue,
                         amountPaid: req.body.amountPaid,
-                        icd10: JSON.stringify(req.body.icd10)
+                        icd10: JSON.parse(req.body.icd10)
                     }
                 }).then((invoice) => {
                     return res.status(200).send(invoice)
@@ -1107,7 +1107,7 @@ router.route('/reports')
                 var endDate = new Date(parsedEndDate)
                 prisma.payment.findMany({
                     where: {
-                        payment_date: {
+                        paymentDate: {
                             gte: startDate,
                             lte: endDate
                         }
@@ -1127,7 +1127,7 @@ router.route('/reports')
                             startDate: startDate,
                             endDate: endDate,
                             totalBalance: totalBalance,
-                            paymentID: JSON.stringify(paymentIDs)
+                            paymentID: JSON.parse(paymentIDs)
                         }
                     }).then((report) => {
                         return res.status(200).send(report)
@@ -1338,7 +1338,7 @@ router.route('/reports/:report_id')
                             startDate: startDate,
                             endDate: endDate,
                             totalBalance: totalBalance,
-                            paymentID: JSON.stringify(paymentIDs)
+                            paymentID: JSON.parse(paymentIDs)
                         }
                     }).then((report) => {
                         return res.status(200).send(report)
