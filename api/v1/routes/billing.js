@@ -1126,7 +1126,7 @@ router.route('/reports')
                     let totalBalance = 0.0
                     payments.forEach((payment) => {
                         paymentIDs.push(payment.paymentID)
-                        totalBalance += payment.total_amount
+                        totalBalance += payment.totalAmount
                     })
                     prisma.reports.create({
                         data: {
@@ -1333,8 +1333,8 @@ router.route('/reports/:report_id')
                     let paymentIDs = []
                     let totalBalance = 0.0
                     payments.forEach((payment) => {
-                        paymentIDs.push(payment.payment_id)
-                        totalBalance += payment.total_amount
+                        paymentIDs.push(payment.paymentID)
+                        totalBalance += payment.totalAmount
                     })
                     prisma.reports.update({
                         where: {
