@@ -87,14 +87,14 @@ router.route('/payments')
                     return res.status(200).send(payments)
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(400).send('Invalid payment details')
+                    return res.status(400).send(e) //'Invalid payment details')
                 })
             } else {
                 return res.status(400).send('No query parameters provided. Must provide userID in query parameters')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
     .post(async (req, res) => {
@@ -131,18 +131,18 @@ router.route('/payments')
                         return res.status(200).send(payment)
                     }).catch((e) => {
                         console.log(e)
-                        return res.status(400).send('Could not update invoice after payment')
+                        return res.status(400).send(e) //'Could not update invoice after payment')
                     })
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(400).send('Invalid payment details')
+                    return res.status(400).send(e) //'Invalid payment details')
                 })
             } else {
                 return res.status(400).send('Invalid body parameters. Must include userID, invoiceID, totalAmount, cardNum, and cardExp')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
 
@@ -293,14 +293,14 @@ router.route('/payments/:payment_id')
                     return res.status(200).send(payments)
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(400).send('Invalid payment details')
+                    return res.status(400).send(e) //'Invalid payment details')
                 })
             } else {
                 return res.status(400).send('No query or path parameters. Must include userID in query and payment_id in path')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
     .put(async (req, res) => {
@@ -340,18 +340,19 @@ router.route('/payments/:payment_id')
                     }).then((invoice) => {
                         return res.status(200).send(payment)
                     }).catch((e) => {
-                        return res.status(400).send('Could not update invoice after payment')
+                        console.log(e)
+                        return res.status(400).send(e) //'Could not update invoice after payment')
                     })
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(400).send('Invalid payment details')
+                    return res.status(400).send(e) //'Invalid payment details')
                 })
             } else {
                 return res.status(400).send('No body parameters. Must include userID, invoiceID, totalAmount, cardNum, and cardExp in body')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
 
     })
@@ -387,14 +388,14 @@ router.route('/payments/:payment_id')
                     return res.status(200).send('Payment deleted')
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(400).send('Invalid payment ID')
+                    return res.status(400).send(e) //'Invalid payment ID')
                 })
             } else {
                 return res.status(400).send('No body or path parameters. Must include userID in body and payment_id in path')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
 
@@ -494,14 +495,14 @@ router.route('/invoices')
                     return res.status(200).send(invoices)
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(400).send('Invalid invoice details')
+                    return res.status(400).send(e) //'Invalid invoice details')
                 })
             } else {
                 return res.status(401).send('No query parameters. Must include userID in query')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
     .post(async (req, res) => {
@@ -542,14 +543,14 @@ router.route('/invoices')
                     return res.status(200).send(invoice)
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(400).send('Invalid invoice details')
+                    return res.status(400).send(e) //'Invalid invoice details')
                 })
             } else {
                 return res.status(400).send('No body parameters. Must include userID, payerID, invoiceTitle, diagnosis, totalAmount, minimumDue, dueDate, and icd10 in body')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
 
@@ -611,14 +612,14 @@ router.route('/invoices/search/icd10')
                     return res.status(200).send(invoices)
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(404).send('Invoices not found')
+                    return res.status(404).send(e) //'Invoices not found')
                 })
             } else {
                 return res.status(400).send('No query parameters. Must include userID and icd10 search term in query')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
 
@@ -678,14 +679,14 @@ router.route('/invoices/search/diagnosis')
                     return res.status(200).send(invoices)
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(404).send('Invoices not found')
+                    return res.status(404).send(e) //'Invoices not found')
                 })
             } else {
                 return res.status(400).send('No query parameters. Must include userID and diagnosis search term in query')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
 
@@ -852,14 +853,14 @@ router.route('/invoices/:invoice_id')
                     }
                     return res.status(200).send(invoice)
                 }).catch((e) => {
-                    return res.status(400).send('Invalid invoice details')
+                    return res.status(400).send(e) //'Invalid invoice details')
                 })
             } else {
                 return res.status(400).send('No query parameters. Must include userID and invoice_id in query')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
     .put(async (req, res) => {
@@ -896,14 +897,14 @@ router.route('/invoices/:invoice_id')
                     return res.status(200).send(invoice)
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(400).send('Invalid invoice details')
+                    return res.status(400).send(e) //'Invalid invoice details')
                 })
             } else {
                 return res.status(400).send('Incorrect body or path parameters. Must include userID, payerID, invoiceTitle, diagnosis, totalAmount, dueDate, minimumDue, and amountPaid in body and invoice_id in path')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
     .delete(async (req, res) => {
@@ -923,14 +924,14 @@ router.route('/invoices/:invoice_id')
                     return res.status(200).send('Invoice deleted')
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(404).send('Invoice not found')
+                    return res.status(404).send(e) //'Invoice not found')
                 })
             } else {
                 return res.status(400).send('Incorrect body or path parameters. Must include userID in body and invoice_id in path')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
 
@@ -992,7 +993,7 @@ router.route('/invoices/:invoice_id/approve')
                         return res.status(200).send(invoice)
                     }).catch((e) => {
                         console.log(e)
-                        return res.status(404).send('Invoice not found')
+                        return res.status(404).send(e) //'Invoice not found')
                     })
                 } else {
                     return res.status(400).send('Invalid invoice ID')
@@ -1002,7 +1003,7 @@ router.route('/invoices/:invoice_id/approve')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
 
@@ -1091,7 +1092,7 @@ router.route('/reports')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
     .post(async (req, res) => {
@@ -1132,18 +1133,18 @@ router.route('/reports')
                         return res.status(200).send(report)
                     }).catch((e) => {
                         console.log(e)
-                        return res.status(404).send('Report not created')
+                        return res.status(404).send(e) //'Report not created')
                     })
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(404).send('Could not find payments')
+                    return res.status(404).send(e) //'Could not find payments')
                 })
             } else {
                 return res.status(400).send('Invalid body. Must include userID, startDate, and endDate in body.')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
 
@@ -1293,13 +1294,13 @@ router.route('/reports/:report_id')
                     return res.status(200).send(report)
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(404).send('Report not found')
+                    return res.status(404).send(e) //'Report not found')
                 })
             } else {
                 return res.status(400).send('Invalid query or path parameters. Must include userID in query and report_id in path')
             }
         } catch (e) {
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
     .put((req, res) => {
@@ -1321,7 +1322,7 @@ router.route('/reports/:report_id')
                     }
                 }).then((payments) => {
                     if (!payments) {
-                        return res.status(404).send('No payments found for report')
+                        return res.status(404).send(e) //'No payments found for report')
                     }
                     let paymentIDs = []
                     let totalBalance = 0.0
@@ -1343,18 +1344,18 @@ router.route('/reports/:report_id')
                         return res.status(200).send(report)
                     }).catch((e) => {
                         console.log(e)
-                        return res.status(404).send('Report not updated')
+                        return res.status(404).send(e) //'Report not updated')
                     })
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(404).send('Could not find payments to create report')
+                    return res.status(404).send(e) //'Could not find payments to create report')
                 })
             } else {
                 return res.status(400).send('Invalid body or path parameters. Must include userID in body, startDate in body, endDate in body, and report_id in path')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
 
     })
@@ -1375,14 +1376,14 @@ router.route('/reports/:report_id')
                     return res.status(200).send("Report deleted")
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(404).send('Report not deleted')
+                    return res.status(404).send(e) //'Report not deleted')
                 })
             } else {
                 return res.status(400).send('Invalid body or path parameters. Must include userID in body and report_id in path')
             }
         } catch (e) {
             console.log(e)
-            return res.status(500).send('Internal server error')
+            return res.status(500).send(e) //'Internal server error')
         }
     })
 
