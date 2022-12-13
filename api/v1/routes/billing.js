@@ -87,7 +87,7 @@ router.route('/payments')
                     return res.status(200).send(payments)
                 }).catch((e) => {
                     console.log(e)
-                    return res.status(400).send(e) //'Invalid payment details')
+                    return res.status(400).send('Invalid payment details')
                 })
             } else {
                 return res.status(400).send('No query parameters provided. Must provide userID in query parameters')
@@ -103,6 +103,9 @@ router.route('/payments')
                 // if (req.body.userID !== 123) {
                 //     return res.status(403).send('User is not authorized to create payment')
                 // }
+                if (!Number(req.body.cardNum) || req.body.cardNum.length !== 16) {
+                    return res.status(400).send('Invalid card Number')
+                }
                 let date = new Date()
                 prisma.payment.create({
                     data: {
@@ -311,6 +314,9 @@ router.route('/payments/:payment_id')
                 // }
                 if (!Number(req.params.payment_id)) {
                     return res.status(400).send('Invalid payment ID')
+                }
+                if (!Number(req.body.cardNum) || req.body.cardNum.length !== 16) {
+                    return res.status(400).send('Invalid card Number')
                 }
                 let date = new Date()
                 prisma.payment.update({
