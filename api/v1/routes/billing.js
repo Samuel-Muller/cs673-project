@@ -543,7 +543,7 @@ router.route('/invoices')
                         amountPaid: 0,
                         lastPaymentDate: null,
                         approved: 0,
-                        icd10: JSON.parse(req.body.icd10)
+                        icd10: JSON.stringify(req.body.icd10)
                     }
                 }).then((invoice) => {
                     return res.status(200).send(invoice)
@@ -897,7 +897,7 @@ router.route('/invoices/:invoice_id')
                         dueDate: dueDate,
                         minimumDue: req.body.minimumDue,
                         amountPaid: req.body.amountPaid,
-                        icd10: JSON.parse(req.body.icd10)
+                        icd10: JSON.stringify(req.body.icd10)
                     }
                 }).then((invoice) => {
                     return res.status(200).send(invoice)
@@ -1111,6 +1111,7 @@ router.route('/reports')
                 var startDate = new Date(parsedStartDate);
                 var parsedEndDate = Date.parse(req.body.endDate);
                 var endDate = new Date(parsedEndDate)
+                console.log(startDate, endDate)
                 prisma.payment.findMany({
                     where: {
                         paymentDate: {
@@ -1128,12 +1129,13 @@ router.route('/reports')
                         paymentIDs.push(payment.paymentID)
                         totalBalance += payment.totalAmount
                     })
+                    console.log(paymentIDs, totalBalance)
                     prisma.reports.create({
                         data: {
                             startDate: startDate,
                             endDate: endDate,
                             totalBalance: totalBalance,
-                            paymentID: JSON.parse(paymentIDs)
+                            paymentIDs: JSON.stringify(paymentIDs)
                         }
                     }).then((report) => {
                         return res.status(200).send(report)
@@ -1344,7 +1346,7 @@ router.route('/reports/:report_id')
                             startDate: startDate,
                             endDate: endDate,
                             totalBalance: totalBalance,
-                            paymentID: JSON.parse(paymentIDs)
+                            paymentIDs: JSON.stringify(paymentIDs)
                         }
                     }).then((report) => {
                         return res.status(200).send(report)

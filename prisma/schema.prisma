@@ -51,5 +51,5 @@ model reports {
   startDate    DateTime @db.DateTime(0)
   endDate      DateTime @db.DateTime(0)
   totalBalance Float    @db.Float
-  paymentID    String?  @db.VarChar(45)
+  paymentIDs   String?  @db.VarChar(10000)
 }
