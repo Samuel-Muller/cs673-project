@@ -80,6 +80,9 @@ router.route('/payments')
                 // if (req.query.userID !== 123) {
                 //     return res.status(403).send('User is not authorized to create payment')
                 // }
+                if (!Number(req.body.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 prisma.payment.findMany().then((payments) => {
                     if (payments.length === 0) {
                         return res.status(404).send('Payments not found')
@@ -103,6 +106,15 @@ router.route('/payments')
                 // if (req.body.userID !== 123) {
                 //     return res.status(403).send('User is not authorized to create payment')
                 // }
+                if (!Number(req.body.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
+                if (!Number(req.body.invoiceID)) {
+                    return res.status(400).send('Invalid invoice ID')
+                }
+                if (!Number(req.body.totalAmount)) {
+                    return res.status(400).send('Invalid total amount')
+                }
                 if (!Number(req.body.cardNum) || req.body.cardNum.length !== 16) {
                     return res.status(400).send('Invalid card Number')
                 }
@@ -285,6 +297,9 @@ router.route('/payments/:payment_id')
                 if (!Number(req.params.payment_id)) {
                     return res.status(400).send('Invalid payment ID')
                 }
+                if (!Number(req.body.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 prisma.payment.findUnique({
                     where: {
                         paymentID: Number(req.params.payment_id)
@@ -314,6 +329,15 @@ router.route('/payments/:payment_id')
                 // }
                 if (!Number(req.params.payment_id)) {
                     return res.status(400).send('Invalid payment ID')
+                }
+                if (!Number(req.body.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
+                if (!Number(req.body.invoiceID)) {
+                    return res.status(400).send('Invalid invoice ID')
+                }
+                if (!Number(req.body.totalAmount)) {
+                    return res.status(400).send('Invalid total amount')
                 }
                 if (!Number(req.body.cardNum) || req.body.cardNum.length !== 16) {
                     return res.status(400).send('Invalid card Number')
@@ -520,6 +544,9 @@ router.route('/invoices')
                 if (!Number(req.body.userID)) {
                     return res.status(400).send('Invalid user ID')
                 }
+                if (!Number(req.body.userID)) {
+                    return res.status(400).send('Invalid payer ID')
+                }
                 if (!Number(req.body.totalAmount)) {
                     return res.status(400).send('Invalid total amount')
                 }
@@ -674,7 +701,9 @@ router.route('/invoices/search/diagnosis')
                 // if (req.query.userID !== 123) {
                 //     return res.status(403).send('User is not authorized to approve invoice')
                 // }
-
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 prisma.invoice.findMany({
                     where: {
                         diagnosis: {
@@ -849,6 +878,9 @@ router.route('/invoices/:invoice_id')
                 if (!Number(req.params.invoice_id)) {
                     return res.status(400).send('Invalid invoice ID')
                 }
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 prisma.invoice.findUnique({
                     where: {
                         invoiceID: Number(req.params.invoice_id)
@@ -877,6 +909,15 @@ router.route('/invoices/:invoice_id')
                 //}
                 if (!Number(req.params.invoice_id)) {
                     return res.status(400).send('Invalid invoice ID')
+                }
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
+                if (!Number(req.body.totalAmount)) {
+                    return res.status(400).send('Invalid total amount')
+                }
+                if (!Number(req.body.minimumDue)) {
+                    return res.status(400).send('Invalid minimum due amount')
                 }
                 let date = new Date()
                 var parsedDueDate = Date.parse(req.body.dueDate);
@@ -921,6 +962,9 @@ router.route('/invoices/:invoice_id')
                 //}
                 if (!Number(req.params.invoice_id)) {
                     return res.status(400).send('Invalid invoice ID')
+                }
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
                 }
                 prisma.invoice.delete({
                     where: {
@@ -986,7 +1030,9 @@ router.route('/invoices/:invoice_id/approve')
                 // if (req.body.userID !== 123) {
                 //     return res.status(403).send('User is not authorized to approve invoice')
                 // }
-
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 if (req.params.invoice_id) {
                     prisma.invoice.update({
                         where: {
@@ -1084,6 +1130,9 @@ router.route('/reports')
                 // if (req.query.userID !== 123) {
                 //     return res.status(403).send('User is not authorized to create report')
                 // }
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 prisma.reports.findMany().then((reports) => {
                     if (!reports) {
                         return res.status(404).send('Reports not found')
@@ -1107,6 +1156,9 @@ router.route('/reports')
                 // if (req.body.userID !== 123) {
                 //     return res.status(403).send('User is not authorized to create report')
                 // }
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 var parsedStartDate = Date.parse(req.body.startDate);
                 var startDate = new Date(parsedStartDate);
                 var parsedEndDate = Date.parse(req.body.endDate);
@@ -1289,6 +1341,9 @@ router.route('/reports/:report_id')
                 if (!Number(req.params.report_id)) {
                     return res.status(400).send('Invalid report ID')
                 }
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 prisma.reports.findUnique({
                     where: {
                         reportID: Number(req.params.report_id)
@@ -1315,6 +1370,12 @@ router.route('/reports/:report_id')
                 //if (req.body.userID !== 123) {
                 //    return res.status(403).send('User is not authorized to update report')
                 //}
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
+                if (!Number(req.params.report_id)) {
+                    return res.status(400).send('Invalid report ID')
+                }
                 var parsedStartDate = Date.parse(req.body.startDate);
                 var startDate = new Date(parsedStartDate);
                 var parsedEndDate = Date.parse(req.body.endDate);
@@ -1371,6 +1432,9 @@ router.route('/reports/:report_id')
                 // if (req.body.userID !== 123) {
                 //     return res.status(403).send('User is not authorized to create report')
                 // }
+                if (!Number(req.query.userID)) {
+                    return res.status(400).send('Invalid user ID')
+                }
                 if (!Number(req.params.report_id)) {
                     return res.status(400).send('Invalid report ID')
                 }
