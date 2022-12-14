@@ -41,3 +41,5 @@ app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec))
 app.listen(port, () => {
     console.log(`API listening on port ${port}`)
 })
+
+module.exports = app

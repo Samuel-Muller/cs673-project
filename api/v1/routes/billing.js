@@ -1111,7 +1111,6 @@ router.route('/reports')
                 var startDate = new Date(parsedStartDate);
                 var parsedEndDate = Date.parse(req.body.endDate);
                 var endDate = new Date(parsedEndDate)
-                console.log(startDate, endDate)
                 prisma.payment.findMany({
                     where: {
                         paymentDate: {
@@ -1129,7 +1128,6 @@ router.route('/reports')
                         paymentIDs.push(payment.paymentID)
                         totalBalance += payment.totalAmount
                     })
-                    console.log(paymentIDs, totalBalance)
                     prisma.reports.create({
                         data: {
                             startDate: startDate,
@@ -1323,7 +1321,7 @@ router.route('/reports/:report_id')
                 var endDate = new Date(parsedEndDate)
                 prisma.payment.findMany({
                     where: {
-                        payment_date: {
+                        paymentDate: {
                             gte: startDate,
                             lte: endDate
                         }
